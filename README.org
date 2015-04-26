@@ -1,0 +1,39 @@
+* NProj - a CLI for .NET project management
+
+- Commands for managing .NET project files, with a familiar interface.
+- Managing NuGet packages intentionally excluded: use nuget.exe or paket.
+- Current status: work in progress. Focusing on F# support.
+
+** TODO Initializing a project
+
+#+begin_src
+nproj init --directory="." --lang=(csharp|fsharp) --type=(library|exe)
+#+end_src
+
+Creates a new project file for that lang, taking the same name as the given directory. Also will create a Properties/AssemblyInfo.
+
+** TODO Adding source files/references/other files
+
+#+begin_src
+nproj add <...filenames> --project="."
+#+end_src
+
+Action depends on the file extension:
+- *.cs or *.fs will be added as a compile include
+- *.csproj or *.fsproj will be added as reference include
+- *.dll will be added as a reference include
+- anything else will be added as a data file
+
+** TODO Removing files
+
+#+begin_src
+nproj remove <..filenames> --project="."
+nproj rm <..filenames> --project="."
+#+end_src
+
+** TODO Moving files
+
+#+begin_src
+nproj move <old_filename> <new_filename> --project="."
+nproj mv <old_filename> <new_filename> --project="."
+#+end_src
