@@ -3,6 +3,7 @@
 
 open System
 open System.IO
+open System.Linq
 open System.Text
 open System.Xml
 open System.Xml.Linq
@@ -15,43 +16,35 @@ let schema = "http://schemas.microsoft.com/developer/msbuild/2003"
 
 type OutputType = Exe | Library
 
+type FileType = Source | Reference | Data
+
 let sample(): XDocument = XDocument.Load fsprojFile
 
 let xname (path: string): XName = XName.Get(path, schema)
 
 let createProj (output: OutputType) (name: string): XDocument =
 
-    let setOutputType (out: string) (xdoc: XDocument): XDocument =
+    let setOutputType (out: string) (xdoc: XDocument): unit =
         seq {
             for proj in xname "Project" |> xdoc.Elements do
                 for prop in xname "PropertyGroup" |> proj.Elements do
                     yield! xname "OutputType" |> prop.Elements
         } |> Seq.iter (fun o -> o.SetValue out)
-        xdoc
 
-    let removeDefaults (xdoc: XDocument): XDocument =
+    let removeDefaults (xdoc: XDocument): unit =
         seq {
             for proj in xname "Project" |> xdoc.Elements do
                 for item in xname "ItemGroup" |> proj.Elements do
                     yield! xname "Compile" |> item.Elements
                     yield! xname "None" |> item.Elements
         } |> Seq.iter (fun r -> r.Remove())
-        xdoc
-
-    let removeEmpty (xdoc: XDocument): XDocument =
-        seq {
-            for proj in xname "Project" |> xdoc.Elements do
-                for item in xname "ItemGroup" |> proj.Elements do
-                    if not item.HasElements then yield item
-        } |> Seq.iter (fun r -> r.Remove())
-        xdoc
 
     let out = sprintf "%A" output
 
-    sample()
-    |> setOutputType out
-    |> removeDefaults
-    |> removeEmpty
+    let proj = sample()
+    setOutputType out proj
+    removeDefaults proj
+    proj
 
 let getProjName (dir:string): string = dir |> Path.GetFullPath |> Path.GetFileName
 
@@ -71,6 +64,59 @@ let init (dir: string) (output: OutputType): unit =
     let name = getProjName dir
     createProj output name
     |> writeProj (sprintf "%s.fsproj" name)
+
+let add (name: string) (dir: string): unit =
+
+    let itemGroups (proj: XDocument): XElement seq =
+        seq {
+            for p in xname "Project" |> proj.Elements do
+                yield! xname "ItemGroup" |> p.Elements
+        }
+
+    let refGroups (itemGroups: XElement seq): XElement seq =
+      itemGroups
+      |> Seq.filter (fun i -> i.Elements(xname "Reference").Any())
+
+    let otherGroups (itemGroups: XElement seq): XElement seq =
+      itemGroups
+      |> Seq.filter (fun i -> i.Elements(xname "Reference").Any() |> not)
+
+    let addItemGroup (proj: XDocument): unit =
+        xname "Project"
+        |> proj.Elements
+        |> Seq.iter (fun p -> p.Add(xname "ItemGroup"))
+
+    let projFile = getProjName dir
+    let proj = projFile |> XDocument.Load
+
+    let fileType =
+        match name |> Path.GetExtension with
+        | ".dll"    -> Reference
+        | ".fsproj" -> Reference
+        | ".fs"     -> Source
+        | _        -> Data
+
+    // 2 item groups defined in template
+    // one with only references
+    // one with no refs, only compiles/includes
+    let targetItemGroup =
+        match fileType with
+        | Reference -> proj |> itemGroups |> refGroups |> Seq.head
+        | _         -> proj |> itemGroups |> otherGroups |> Seq.head
+
+    let xel =
+        match fileType with
+        | Reference -> XElement(xname "Reference")
+        | Source -> XElement(xname "Compile")
+        | Data -> XElement(xname "None")
+
+    // No namespace on attribute
+    xel.SetAttributeValue(XName.Get "Include", name)
+    targetItemGroup.Add(xel)
+
+    if File.Exists(name) then () else File.WriteAllLines(name, [])
+
+    writeProj projFile proj
 
 [<EntryPoint>]
 let main (args: string[]): int =

@@ -24,6 +24,8 @@ Action depends on the file extension:
 - *.dll will be added as a reference include
 - anything else will be added as a data file
 
+If it's a source file (*.fs, *.cs) and it doesn't exist, an empty file will be created.
+
 ** TODO Removing files
 
 #+begin_src
