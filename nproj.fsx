@@ -118,11 +118,18 @@ let add (name: string) (dir: string): unit =
 
     writeProj projFile proj
 
-[<EntryPoint>]
-let main (args: string[]): int =
-    match args |> Array.map (fun a -> a.ToLowerInvariant()) with
-    | [| "init"; dir; |] -> init dir Library
-    | [| "init"; dir; "--type"; "exe" |] -> init dir Exe
-    | [| "init"; dir; "--type"; "library" |] -> init dir Library
-    | _ -> failwith "Arguments not recognized"
-    0
+let parseInit (args: string seq): unit = failwith "TODO init"
+let parseAdd (args: string seq): unit = failwith "TODO add"
+let printUsage (): unit = failwith "TODO help"
+
+let cliArgs =
+    fsi.CommandLineArgs
+    |> Seq.skip 1
+    |> Seq.map (fun a -> a.ToLowerInvariant())
+    |> List.ofSeq
+
+printfn "%A" cliArgs
+match cliArgs with
+| "init"::rest -> parseInit rest
+| "add"::rest -> parseAdd rest
+| _ -> printUsage ()
