@@ -5,22 +5,31 @@ open System
 open System.IO
 open System.Linq
 open System.Text
+open System.Text.RegularExpressions
 open System.Xml
 open System.Xml.Linq
+
+[<Literal>]
+let schema = "http://schemas.microsoft.com/developer/msbuild/2003"
 
 [<Literal>]
 let fsprojFile = "NProj/NProj.fsproj"
 
 [<Literal>]
-let schema = "http://schemas.microsoft.com/developer/msbuild/2003"
+let assemblyInfoFile = "NProj/AssemblyInfo.fs"
 
 type OutputType = Exe | Library
 
 type FileType = Source | Reference | Data
 
-let sample(): XDocument = XDocument.Load fsprojFile
+let sampleProj(): XDocument = XDocument.Load fsprojFile
+let sampleAssemblyInfo(): string = File.ReadAllText assemblyInfoFile
 
 let xname (path: string): XName = XName.Get(path, schema)
+
+let createAssemblyInfo (name: string): string =
+    let ai = sampleAssemblyInfo()
+    Regex.Replace(ai, "NProjPlaceholder", name)
 
 let createProj (output: OutputType) (name: string): XDocument =
 
@@ -31,22 +40,20 @@ let createProj (output: OutputType) (name: string): XDocument =
                     yield! xname "OutputType" |> prop.Elements
         } |> Seq.iter (fun o -> o.SetValue out)
 
-    let removeDefaults (xdoc: XDocument): unit =
-        seq {
-            for proj in xname "Project" |> xdoc.Elements do
-                for item in xname "ItemGroup" |> proj.Elements do
-                    yield! xname "Compile" |> item.Elements
-                    yield! xname "None" |> item.Elements
-        } |> Seq.iter (fun r -> r.Remove())
-
     let out = sprintf "%A" output
 
-    let proj = sample()
+    let proj = sampleProj()
     setOutputType out proj
-    removeDefaults proj
     proj
 
-let getProjName (dir:string): string = dir |> Path.GetFullPath |> Path.GetFileName
+let createSource (name: string): string =
+    sprintf "namespace %s%s" name Environment.NewLine
+
+let filename (parts: string seq): string =
+      String.Join(Path.DirectorySeparatorChar.ToString(), parts)
+
+let getProjName (dir:string): string =
+      dir |> Path.GetFullPath |> Path.GetFileName
 
 let writeProj (target: string) (proj: XDocument): unit =
     let settings = XmlWriterSettings()
@@ -59,11 +66,14 @@ let writeProj (target: string) (proj: XDocument): unit =
     use writer = XmlWriter.Create(target, settings)
     proj.Save(writer)
 
-// External API
 let init (dir: string) (output: OutputType): unit =
     let name = getProjName dir
-    createProj output name
-    |> writeProj (sprintf "%s.fsproj" name)
+    let projFile = filename [ dir; sprintf "%s.fsproj" name ]
+    createProj output name |> writeProj projFile
+
+    let aiFile = filename [ dir; "AssemblyInfo.fs" ]
+    let ai = createAssemblyInfo name
+    File.WriteAllText(aiFile, ai)
 
 let add (name: string) (dir: string): unit =
 
@@ -72,6 +82,10 @@ let add (name: string) (dir: string): unit =
             for p in xname "Project" |> proj.Elements do
                 yield! xname "ItemGroup" |> p.Elements
         }
+
+    // 2 item groups defined in template
+    // one with only references
+    // one with no refs, only compiles/includes
 
     let refGroups (itemGroups: XElement seq): XElement seq =
       itemGroups
@@ -86,7 +100,7 @@ let add (name: string) (dir: string): unit =
         |> proj.Elements
         |> Seq.iter (fun p -> p.Add(xname "ItemGroup"))
 
-    let projFile = getProjName dir
+    let projFile = getProjName dir |> sprintf "%s.fsproj"
     let proj = projFile |> XDocument.Load
 
     let fileType =
@@ -96,39 +110,55 @@ let add (name: string) (dir: string): unit =
         | ".fs"     -> Source
         | _        -> Data
 
-    // 2 item groups defined in template
-    // one with only references
-    // one with no refs, only compiles/includes
-    let targetItemGroup =
-        match fileType with
-        | Reference -> proj |> itemGroups |> refGroups |> Seq.head
-        | _         -> proj |> itemGroups |> otherGroups |> Seq.head
+    let addItem (tag: string): unit =
+        let targetItemGroup =
+            match fileType with
+            | Reference -> proj |> itemGroups |> refGroups |> Seq.head
+            | _         -> proj |> itemGroups |> otherGroups |> Seq.head
 
-    let xel =
-        match fileType with
-        | Reference -> XElement(xname "Reference")
-        | Source -> XElement(xname "Compile")
-        | Data -> XElement(xname "None")
+        let xel = XElement(xname tag)
+        // No namespace on attribute
+        xel.SetAttributeValue(XName.Get "Include", name)
+        targetItemGroup.Add(xel)
 
-    // No namespace on attribute
-    xel.SetAttributeValue(XName.Get "Include", name)
-    targetItemGroup.Add(xel)
+    let addSource (name: string): unit =
+        if File.Exists(name)
+        then ()
+        else File.WriteAllLines(name, [ createSource name ])
 
-    if File.Exists(name) then () else File.WriteAllLines(name, [])
+    match fileType with
+    | Reference -> addItem "Reference"
+    | Source -> addItem "Compile"; addSource name
+    | Data -> addItem "None"
 
     writeProj projFile proj
 
-let parseInit (args: string seq): unit = failwith "TODO init"
-let parseAdd (args: string seq): unit = failwith "TODO add"
-let printUsage (): unit = failwith "TODO help"
+let printUsage (): unit =
+    File.ReadAllLines("README.org") // temporary solution
+    |> Seq.iter Console.WriteLine
 
-let cliArgs =
-    fsi.CommandLineArgs
-    |> Seq.skip 1
-    |> Seq.map (fun a -> a.ToLowerInvariant())
-    |> List.ofSeq
+let outputType (ot: string) =
+    match ot.ToLowerInvariant() with
+    | "exe" -> Exe
+    | "lib" -> Library
+    | "library" -> Library
+    | _ -> failwith "Output type not recognised - should be lib or exe"
 
-printfn "%A" cliArgs
+let parseInit (args: string list): unit =
+    match args with
+    | [] -> init "." Library
+    | [ "--directory"; dir ] -> init dir Library
+    | [ "--directory"; dir; "--type"; ot ] -> outputType ot |> init dir
+    | _ -> printUsage ()
+
+let parseAdd (args: string list): unit =
+    match args with
+    | [ name; "--project"; dir ] -> add name dir
+    | [ name ] -> add name "."
+    | _ -> printUsage ()
+
+let cliArgs = fsi.CommandLineArgs |> Seq.skip 1 |> List.ofSeq
+
 match cliArgs with
 | "init"::rest -> parseInit rest
 | "add"::rest -> parseAdd rest

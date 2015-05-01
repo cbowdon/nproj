@@ -1,9 +1,9 @@
 ﻿namespace System
 open System.Reflection
 
-[<assembly: AssemblyTitleAttribute("MinimalFSharpProject")>]
-[<assembly: AssemblyProductAttribute("MinimalFSharpProject")>]
-[<assembly: AssemblyDescriptionAttribute("MinimalFSharpProject")>]
+[<assembly: AssemblyTitleAttribute("NProjPlaceholder")>]
+[<assembly: AssemblyProductAttribute("NProjPlaceholder")>]
+[<assembly: AssemblyDescriptionAttribute("NProjPlaceholder")>]
 [<assembly: AssemblyVersionAttribute("1.0")>]
 [<assembly: AssemblyFileVersionAttribute("1.0")>]
 [<assembly: CLSCompliant()>]

@@ -6,7 +6,6 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>33b41d1c-7d30-491a-ba81-ba62e1629a13</ProjectGuid>
-    <!-- OutputType = Library OR Exe (see MSBuild docs) -->
     <OutputType>Library</OutputType>
     <RootNamespace>NProj</RootNamespace>
     <AssemblyName>NProj</AssemblyName>
@@ -44,8 +43,6 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library.fs" />
-    <None Include="Script.fsx" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
