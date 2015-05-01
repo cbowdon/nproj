@@ -13,10 +13,10 @@ open System.Xml.Linq
 let schema = "http://schemas.microsoft.com/developer/msbuild/2003"
 
 [<Literal>]
-let fsprojFile = "NProj/NProj.fsproj"
+let fsprojFile = "Sample/Sample.fsproj"
 
 [<Literal>]
-let assemblyInfoFile = "NProj/AssemblyInfo.fs"
+let assemblyInfoFile = "Sample/AssemblyInfo.fs"
 
 type OutputType = Exe | Library
 
