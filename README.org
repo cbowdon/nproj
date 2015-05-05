@@ -1,8 +1,8 @@
 * NProj - a CLI for .NET project management
 
 - Commands for managing .NET project files, with a familiar interface.
-- Managing NuGet packages intentionally excluded: use nuget.exe or paket.
 - Current status: prototyping. Focusing on F# support.
+- N.B. managing NuGet packages intentionally excluded: use nuget.exe or paket.
 
 ** TODO Initializing a project
 
@@ -39,3 +39,9 @@ nproj rm <..filenames> --project="."
 nproj move <old_filename> <new_filename> --project="."
 nproj mv <old_filename> <new_filename> --project="."
 #+end_src
+
+* Unrelated notes
+** In Spacemacs on Ubuntu 14.04, I always get a segfault from the following sequence:
++ SPC f f (some file)
++ SPC w /
++ SPC f f (some other file)

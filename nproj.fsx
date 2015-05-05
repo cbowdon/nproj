@@ -20,42 +20,79 @@ let assemblyInfoFile = "Sample/AssemblyInfo.fs"
 
 type OutputType = Exe | Library
 
-type FileType = Source | Reference | Data
+type FileType = Source | Reference | Data | Project
 
-let sampleProj(): XDocument = XDocument.Load fsprojFile
-let sampleAssemblyInfo(): string = File.ReadAllText assemblyInfoFile
+type Library = { Include: string; Private: bool option }
 
-let xname (path: string): XName = XName.Get(path, schema)
+type SourceFile = SourceFile of Uri | DataFile of Uri
 
-let createAssemblyInfo (name: string): string =
-    let ai = sampleAssemblyInfo()
-    Regex.Replace(ai, "NProjPlaceholder", name)
+type ItemType = Library | SourceFile | Project
 
-let createProj (output: OutputType) (name: string): XDocument =
+type Import = { Project: string; Condition: string }
 
-    let setOutputType (out: string) (xdoc: XDocument): unit =
-        seq {
-            for proj in xname "Project" |> xdoc.Elements do
-                for prop in xname "PropertyGroup" |> proj.Elements do
-                    yield! xname "OutputType" |> prop.Elements
-        } |> Seq.iter (fun o -> o.SetValue out)
+type Properties = { Guid: Guid; OutputType: OutputType; Name: string }
 
-    let out = sprintf "%A" output
+type Configuration = {
+    Optimize: bool
+    Tailcalls: bool
+    OutputPath: Uri
+    DefineConstants: string list
+    WarningLevel: int
+    DocumentationFile: Uri
+    DebugType: bool
+    DebugSymbols: bool
+    Condition: string
+}
 
-    let proj = sampleProj()
-    setOutputType out proj
-    proj
+type Project = {
+    Name: string
+    File: Uri
+    References: Library list
+    ProjectReferences: Project list
+    Files: SourceFile list
+    Properties: Properties
+    Configurations: Configuration list
+}
 
-let createSource (name: string): string =
-    sprintf "namespace %s%s" name Environment.NewLine
+// Serialization
+module Xml =
+    module Write =
+        let project (proj: Project): XDocument = failwith "TODO"
+        let configuration (conf: Configuration): XElement = failwith "TODO"
+        let properties (prop: Properties): XElement = failwith "TODO"
+        let import (imp: Import): XElement = failwith "TODO"
+        let reference (lib: Library): XElement = failwith "TODO"
+        let projectReference (lib: Library): XElement = failwith "TODO"
+        let sourceFile (file: SourceFile): XElement = failwith "TODO"
+        let toDisk (file: Uri) (xdoc: XDocument): unit = failwith "TODO"
+    module Read =
+        let project (proj: XDocument): Project = failwith "TODO"
+        let configuration (conf: XElement): Configuration = failwith "TODO"
+        let properties (prop: XElement): Properties = failwith "TODO"
+        let import (imp: XElement): Import = failwith "TODO"
+        let reference (lib: XElement): Library = failwith "TODO"
+        let projectReference (lib: XElement): Library = failwith "TODO"
+        let sourceFile (file: XElement): SourceFile = failwith "TODO"
 
-let filename (parts: string seq): string =
-      String.Join(Path.DirectorySeparatorChar.ToString(), parts)
+// Parsing user commands
+module Read =
+    let directory (input: string): Uri option = failwith "TODO"
+    let outputType (input: string): OutputType option = failwith "TODO"
+    let project (input: string): Project option = failwith "TODO"
+    let filename (input: string): ItemType option = failwith "TODO"
+    let file (input: string): Uri option = failwith "TODO"
 
-let getProjName (dir:string): string =
-      dir |> Path.GetFullPath |> Path.GetFileName
+// Main operations
+module NProj =
+    let init (directory: Uri) (outputType: OutputType): Project = failwith "TODO"
+    let add (project: Project) (filename: Uri): Project = failwith "TODO"
+    let remove (project: Project) (filename: Uri): Project = failwith "TODO"
+    let move (project: Project) (source: Uri) (target: Uri): Project = failwith "TODO"
 
-let writeProj (target: string) (proj: XDocument): unit =
+// Utility funcs
+let assemblyInfo (project: Project): string = failwith "TODO"
+
+let settings: XmlWriterSettings =
     let settings = XmlWriterSettings()
     settings.Encoding <- Encoding.UTF8
     settings.Indent <- true
@@ -63,103 +100,20 @@ let writeProj (target: string) (proj: XDocument): unit =
     settings.OmitXmlDeclaration <- false
     settings.NewLineOnAttributes <- false
     settings.NewLineChars <- Environment.NewLine
-    use writer = XmlWriter.Create(target, settings)
-    proj.Save(writer)
-
-let init (dir: string) (output: OutputType): unit =
-    let name = getProjName dir
-    let projFile = filename [ dir; sprintf "%s.fsproj" name ]
-    createProj output name |> writeProj projFile
-
-    let aiFile = filename [ dir; "AssemblyInfo.fs" ]
-    let ai = createAssemblyInfo name
-    File.WriteAllText(aiFile, ai)
-
-let add (name: string) (dir: string): unit =
-
-    let itemGroups (proj: XDocument): XElement seq =
-        seq {
-            for p in xname "Project" |> proj.Elements do
-                yield! xname "ItemGroup" |> p.Elements
-        }
-
-    // 2 item groups defined in template
-    // one with only references
-    // one with no refs, only compiles/includes
-
-    let refGroups (itemGroups: XElement seq): XElement seq =
-      itemGroups
-      |> Seq.filter (fun i -> i.Elements(xname "Reference").Any())
-
-    let otherGroups (itemGroups: XElement seq): XElement seq =
-      itemGroups
-      |> Seq.filter (fun i -> i.Elements(xname "Reference").Any() |> not)
-
-    let addItemGroup (proj: XDocument): unit =
-        xname "Project"
-        |> proj.Elements
-        |> Seq.iter (fun p -> p.Add(xname "ItemGroup"))
-
-    let projFile = getProjName dir |> sprintf "%s.fsproj"
-    let proj = projFile |> XDocument.Load
-
-    let fileType =
-        match name |> Path.GetExtension with
-        | ".dll"    -> Reference
-        | ".fsproj" -> Reference
-        | ".fs"     -> Source
-        | _        -> Data
-
-    let addItem (tag: string): unit =
-        let targetItemGroup =
-            match fileType with
-            | Reference -> proj |> itemGroups |> refGroups |> Seq.head
-            | _         -> proj |> itemGroups |> otherGroups |> Seq.head
-
-        let xel = XElement(xname tag)
-        // No namespace on attribute
-        xel.SetAttributeValue(XName.Get "Include", name)
-        targetItemGroup.Add(xel)
-
-    let addSource (name: string): unit =
-        if File.Exists(name)
-        then ()
-        else File.WriteAllLines(name, [ createSource name ])
-
-    match fileType with
-    | Reference -> addItem "Reference"
-    | Source -> addItem "Compile"; addSource name
-    | Data -> addItem "None"
-
-    writeProj projFile proj
+    settings
 
 let printUsage (): unit =
     File.ReadAllLines("README.org") // temporary solution
     |> Seq.iter Console.WriteLine
 
-let outputType (ot: string) =
-    match ot.ToLowerInvariant() with
-    | "exe" -> Exe
-    | "lib" -> Library
-    | "library" -> Library
-    | _ -> failwith "Output type not recognised - should be lib or exe"
-
-let parseInit (args: string list): unit =
+let main (args: string list): int =
     match args with
-    | [] -> init "." Library
-    | [ "--directory"; dir ] -> init dir Library
-    | [ "--directory"; dir; "--type"; ot ] -> outputType ot |> init dir
-    | _ -> printUsage ()
+    | "init"::rest -> failwith "TODO init"
+    | "add"::rest -> failwith "TODO add"
+    | "remove"::rest -> failwith "TODO remove"
+    | "rm"::rest -> failwith "TODO remove"
+    | "move"::rest -> failwith "TODO move"
+    | "mv"::rest -> failwith "TODO move"
+    | _ -> failwith "TODO no args specified - usage statement"
 
-let parseAdd (args: string list): unit =
-    match args with
-    | [ name; "--project"; dir ] -> add name dir
-    | [ name ] -> add name "."
-    | _ -> printUsage ()
-
-let cliArgs = fsi.CommandLineArgs |> Seq.skip 1 |> List.ofSeq
-
-match cliArgs with
-| "init"::rest -> parseInit rest
-| "add"::rest -> parseAdd rest
-| _ -> printUsage ()
+fsi.CommandLineArgs |> Seq.skip 1 |> List.ofSeq |> main
