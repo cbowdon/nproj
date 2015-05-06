@@ -26,7 +26,7 @@ type Library = { Include: string; Private: bool option }
 
 type SourceFile = SourceFile of Uri | DataFile of Uri
 
-type ItemType = Library | SourceFile | Project
+type ItemType = Reference | File | ProjectReference
 
 type Import = { Project: string; Condition: string }
 
@@ -76,11 +76,39 @@ module Xml =
 
 // Parsing user commands
 module Read =
-    let directory (input: string): Uri option = failwith "TODO"
-    let outputType (input: string): OutputType option = failwith "TODO"
-    let project (input: string): Project option = failwith "TODO"
-    let filename (input: string): ItemType option = failwith "TODO"
-    let file (input: string): Uri option = failwith "TODO"
+    let projectFile (input: string): Uri option =
+        let projFileForDir dirPath =
+            if Directory.Exists(dirPath)
+            then
+                let uri = Uri(dirPath)
+                let projFilename = uri.Segments.Last() |> sprintf "%s.fsproj"
+                Uri(uri, projFilename) |> Some
+            else
+                None
+        match Path.GetExtension(input).ToLowerInvariant() with
+        | "fsproj" -> Uri(input) |> Some
+        | _ -> try projFileForDir input with | _ -> None
+
+    let outputType (input: string): OutputType option =
+        match input.ToLowerInvariant() with
+        | "exe" -> Some Exe
+        | "lib" -> Some Library
+        | _ -> None
+
+    let filename (input: string): ItemType option =
+        match Path.GetExtension(input).ToLowerInvariant() with
+        | "fs" -> Some File
+        | "fsproj" -> Some ProjectReference
+        | "dll" -> Some Reference
+        | _ -> Some File
+
+    let file (input: string): Uri option = try Uri(input) |> Some with | _ -> None
+
+    let project (input: string): Project option =
+        match projectFile input with
+        | None -> None
+        | Some p -> p.AbsolutePath |> XDocument.Load |> Xml.Read.project |> Some
+
 
 // Main operations
 module NProj =
