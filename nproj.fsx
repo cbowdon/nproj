@@ -59,14 +59,55 @@ module Xml =
     let xnons (name: string): XName = XName.Get name // XName with no namespace
 
     module Write =
-        let project (proj: Project): XDocument = failwith "TODO"
         let configuration (conf: Configuration): XElement = failwith "TODO"
-        let properties (prop: Properties): XElement = failwith "TODO"
+
+        let properties (prop: Properties): XElement =
+            XElement(xname "PropertyGroup",
+                XElement(xname "OutputType", sprintf "%A" prop.OutputType),
+                XElement(xname "Name", sprintf "%s" prop.Name),
+                XElement(xname "ProjectGuid", sprintf "%A" prop.Guid))
+
         let import (imp: Import): XElement = failwith "TODO"
-        let reference (lib: Library): XElement = failwith "TODO"
+
+        let priv (p: bool option): XElement list =
+            match p with
+            | Some p -> [ XElement(xname "Private", p) ]
+            | None -> []
+
+        let reference (lib: Library): XElement =
+            XElement(xname "Reference",
+                     XAttribute(xname "Include", lib.Include),
+                     priv lib.Private)
+
+        let inclusion (file: Include): XElement =
+            // TODO would prefer relative paths here
+            match file with
+            | SourceFile uri -> XElement(xname "Compile", XAttribute(xname "Include", uri.AbsolutePath))
+            | DataFile uri -> XElement(xname "None", XAttribute(xname "Include", uri.AbsolutePath))
+
         let projectReference (lib: Library): XElement = failwith "TODO"
-        let sourceFile (file: Include): XElement = failwith "TODO"
+
+        let project (proj: Project): XDocument =
+            XDocument(
+                XElement(xname "Project",
+                    List.concat [
+                        [ properties proj.Properties ];
+                        List.map reference proj.References;
+                        List.map inclusion proj.Includes;
+                        // List.map projectReference proj.ProjectReferences, // TODO
+                    ]))
+
+    module IO =
         let toDisk (file: Uri) (xdoc: XDocument): unit = failwith "TODO"
+        let settings: XmlWriterSettings =
+            let settings = XmlWriterSettings()
+            settings.Encoding <- Encoding.UTF8
+            settings.Indent <- true
+            settings.IndentChars <- "  "
+            settings.OmitXmlDeclaration <- false
+            settings.NewLineOnAttributes <- false
+            settings.NewLineChars <- Environment.NewLine
+            settings
 
     module Read =
 
@@ -151,7 +192,7 @@ module Read =
         | ".dll" -> Some Reference
         | _ -> Some File
 
-    let file (input: string): Uri option = try Uri(input) |> Some with | _ -> None
+    let file (input: string): Uri option = try Uri(Path.GetFullPath(input)) |> Some with | _ -> None
 
     let project (input: string): Project option =
         match projectFile input with
@@ -169,16 +210,6 @@ module NProj =
 // Utility funcs
 let assemblyInfo (project: Project): string = failwith "TODO"
 
-let settings: XmlWriterSettings =
-    let settings = XmlWriterSettings()
-    settings.Encoding <- Encoding.UTF8
-    settings.Indent <- true
-    settings.IndentChars <- "  "
-    settings.OmitXmlDeclaration <- false
-    settings.NewLineOnAttributes <- false
-    settings.NewLineChars <- Environment.NewLine
-    settings
-
 let printUsage (): unit =
     File.ReadAllLines("README.org") // temporary solution
     |> Seq.iter Console.WriteLine
@@ -195,4 +226,8 @@ let main (args: string list): int =
 
 //fsi.CommandLineArgs |> Seq.skip 1 |> List.ofSeq |> main
 
-Read.project fsprojFile
+let proj = Read.project fsprojFile
+let xml =
+    match proj with
+    | Some p -> Xml.Write.project p
+    | None -> failwith "None!"
