@@ -7,7 +7,7 @@
 ** TODO Initializing a project
 
 #+begin_src
-nproj init --directory="." --lang=(csharp|fsharp) --type=(library|exe)
+nproj init <directory="."> --lang=(csharp|fsharp) --type=(library|exe)
 #+end_src
 
 Creates a new project file for that lang, taking the same name as the given directory. Also will create an AssemblyInfo.
@@ -40,8 +40,8 @@ nproj move <old_filename> <new_filename> --project="."
 nproj mv <old_filename> <new_filename> --project="."
 #+end_src
 
-* Unrelated notes
-** In Spacemacs on Ubuntu 14.04, I always get a segfault from the following sequence:
+** Unrelated notes
+*** TODO File bug: in Spacemacs on Ubuntu 14.04, I always get a segfault from the following sequence:
 + SPC f f (some file)
 + SPC w /
 + SPC f f (some other file)
