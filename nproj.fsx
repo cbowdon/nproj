@@ -60,7 +60,7 @@ module Xml =
     let schema = "http://schemas.microsoft.com/developer/msbuild/2003"
 
     let xname (name: string): XName = XName.Get(name, schema)
-    let xnons (name: string): XName = XName.Get name // XName with no namespace
+    let xnons (name: string): XName = XName.Get name // XName with no namespace, for attributes
 
     module Marshal =
         let configuration (conf: Configuration): XElement = failwith "TODO"
@@ -80,14 +80,14 @@ module Xml =
 
         let reference (lib: Library): XElement =
             XElement(xname "Reference",
-                     XAttribute(xname "Include", lib.Include),
+                     XAttribute(xnons "Include", lib.Include),
                      priv lib.Private)
 
         let inclusion (file: Include): XElement =
             // TODO would prefer relative paths here
             match file with
-            | SourceFile uri -> XElement(xname "Compile", XAttribute(xname "Include", uri.AbsolutePath))
-            | DataFile uri -> XElement(xname "None", XAttribute(xname "Include", uri.AbsolutePath))
+            | SourceFile uri -> XElement(xname "Compile", XAttribute(xnons "Include", uri.AbsolutePath))
+            | DataFile uri -> XElement(xname "Content", XAttribute(xnons "Include", uri.AbsolutePath))
 
         let projectReference (lib: Library): XElement = failwith "TODO"
 
@@ -135,7 +135,7 @@ module Xml =
             let uri = Uri(inc.Value)
             match file.Name.ToString() with
             | "Compile" -> SourceFile uri
-            | "None" -> DataFile uri
+            | "Content" -> DataFile uri
             | _ -> failwith "Is not a source file or data file"
 
         let properties (prop: XElement): Properties =
@@ -157,7 +157,7 @@ module Xml =
             let itemGroups = proj.Descendants(xname "ItemGroup")
             let refs = itemGroups.Descendants(xname "Reference") |> Seq.map reference
             let compiles = itemGroups.Descendants(xname "Compile") |>  Seq.map inclusion
-            let nones = itemGroups.Descendants(xname "None") |>  Seq.map inclusion
+            let nones = itemGroups.Descendants(xname "Content") |>  Seq.map inclusion
             {
                 File = file
                 Properties = props
