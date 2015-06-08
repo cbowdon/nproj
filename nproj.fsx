@@ -58,7 +58,7 @@ module Read =
         | "f#" -> FSharp
         | "csharp" -> CSharp
         | "c#" -> CSharp
-        | _ -> lang |> sprintf "Language not recognised: %s" |> failwith
+        | _ -> failwith "Language not recognised: %s" lang
 
     let outputType (ot: string): OutputType =
         match ot.ToLowerInvariant() with
@@ -66,16 +66,45 @@ module Read =
         | "lib" -> Library
         | "executable" -> Exe
         | "exe" -> Exe
-        | _ -> ot |> sprintf "Output type not recognised: %s" |> failwith
+        | _ -> failwith "Output type not recognised: %s" ot
 
 module Project =
-  open Microsoft.Build.Evaluation
-  open Microsoft.Build.Framework
 
-  let init (args: Init): int = failwith "undefined"
-  let add (args: Add): int = failwith "undefined"
-  let remove (args: Remove): int = failwith "undefined"
-  let move (args: Move): int = failwith "undefined"
+    open System.IO
+    open Microsoft.Build.Evaluation
+    open Microsoft.Build.Framework
+
+    let uri (path: string): Uri = Uri(path)
+
+    let findProjectsInDir (lang: Language) (path: string): string list =
+        let pattern = match lang with
+        | FSharp -> "*.fsproj"
+        | CSharp -> "*.csproj"
+        Directory.EnumerateFiles(path, pattern) |> List.ofSeq
+
+    let projectFile (lang: Language) (path: string): string =
+        let name = Path.GetFileNameWithoutExtension path
+        let extension = match lang with
+        | FSharp -> ".fsproj"
+        | CSharp -> ".csproj"
+        Path.Combine(path, sprintf "%s%s" name extension)
+
+    let init (args: Init): unit =
+        let projFile =
+            match args.Path with
+            | ProjectFile path -> path
+            | Folder path ->
+                match findProjectsInDir args.Lang path with
+                | [] -> projectFile args.Lang path
+                | x::_ -> x
+        let proj = Project()
+        proj.SetProperty("OutputType", sprintf "%A" args.Type) |> ignore
+        proj.SetProperty("Language", sprintf "%A" args.Lang) |> ignore
+        proj.Save(projFile)
+
+    let add (args: Add): unit = failwith "undefined"
+    let remove (args: Remove): unit = failwith "undefined"
+    let move (args: Move): unit = failwith "undefined"
 
   (*
   // Testy test
@@ -96,6 +125,7 @@ module Parsers =
             | "--lang"::lang::rest -> init' { acc with Lang = Read.language lang } rest
             | "--type"::ot::rest -> init' { acc with Type = Read.outputType ot } rest
             | dir::rest -> init' { acc with Path = Read.projectPath dir } rest
+            | [] -> acc
         let acc' = {
             Path = Folder "."
             Lang = FSharp
@@ -106,10 +136,10 @@ module Parsers =
     let remove (args: string seq): Remove = failwith "undefined"
     let move (args: string seq): Move = failwith "undefined"
 
-let help (): int = failwith "undefined"
+let help (): unit = failwith "undefined"
 
-let main (args: string[]): int =
-    match List.ofSeq args with
+let main (args: string[]): unit =
+    match args |> Seq.skip 1 |> List.ofSeq with
     | "init"::rest -> rest |> Parsers.init |> Project.init
     | "add"::rest -> rest |> Parsers.add |> Project.add
     | "remove"::rest -> rest |> Parsers.remove |> Project.remove
@@ -117,3 +147,8 @@ let main (args: string[]): int =
     | "move"::rest -> rest |> Parsers.move |> Project.move
     | "mv"::rest -> rest |> Parsers.move |> Project.move
     | _ -> help()
+
+// TEST!
+//let args = Parsers.init [ "."; "--lang"; "fsharp"; "--type"; "exe" ]
+//Project.init args
+main [| "nproj"; "init";|]
