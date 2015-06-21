@@ -6,6 +6,7 @@
 //   ./build.pl
 // Must reference all the custom assemblies or will fall back to GAC version.
 // TODO make msbuild a submodule
+// TODO doesn't fucking work... can't load a project (;_;)
 #r "../msbuild/bin/Unix/Debug-MONO/Microsoft.Build.dll"
 #r "../msbuild/bin/Unix/Debug-MONO/Microsoft.Build.Framework.dll"
 #r "../msbuild/bin/Unix/Debug-MONO/Microsoft.Build.Tasks.Core.dll"
@@ -68,7 +69,7 @@ module Read =
         | "exe" -> Exe
         | _ -> failwith "Output type not recognised: %s" ot
 
-module Project =
+module NProj =
 
     open System.IO
     open Microsoft.Build.Evaluation
@@ -77,16 +78,18 @@ module Project =
     let uri (path: string): Uri = Uri(path)
 
     let findProjectsInDir (lang: Language) (path: string): string list =
-        let pattern = match lang with
-        | FSharp -> "*.fsproj"
-        | CSharp -> "*.csproj"
+        let pattern =
+            match lang with
+            | FSharp -> "*.fsproj"
+            | CSharp -> "*.csproj"
         Directory.EnumerateFiles(path, pattern) |> List.ofSeq
 
     let projectFile (lang: Language) (path: string): string =
-        let name = Path.GetFileNameWithoutExtension path
-        let extension = match lang with
-        | FSharp -> ".fsproj"
-        | CSharp -> ".csproj"
+        let name = path |> Path.GetFullPath |> Path.GetFileNameWithoutExtension
+        let extension =
+            match lang with
+            | FSharp -> ".fsproj"
+            | CSharp -> ".csproj"
         Path.Combine(path, sprintf "%s%s" name extension)
 
     let init (args: Init): unit =
@@ -97,14 +100,42 @@ module Project =
                 match findProjectsInDir args.Lang path with
                 | [] -> projectFile args.Lang path
                 | x::_ -> x
+        let name = Path.GetFileNameWithoutExtension(projFile)
         let proj = Project()
-        proj.SetProperty("OutputType", sprintf "%A" args.Type) |> ignore
+        proj.Xml.DefaultTargets <- "Build"
+        // Imports
+        let commonPropImport = proj.Xml.AddImport("$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props")
+        commonPropImport.Condition <- "Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"
+        // Properties
         proj.SetProperty("Language", sprintf "%A" args.Lang) |> ignore
+        proj.SetProperty("OutputType", sprintf "%A" args.Type) |> ignore
+        proj.SetProperty("Name", name) |> ignore
+        proj.SetProperty("RootNamespace", name) |> ignore
+        proj.SetProperty("AssemblyName", name) |> ignore
+        proj.SetProperty("TargetFrameworkVersion", "v4.0") |> ignore
+        proj.SetProperty("TargetFSharpCoreVersion", "4.3.0.0") |> ignore
+        proj.SetProperty("SchemaVersion", "2.0") |> ignore
+        proj.SetProperty("ProjectGuid", Guid.NewGuid() |> sprintf "%A") |> ignore
+        // Default references
+        proj.AddItem("Reference", "mscorlib") |> ignore
+        proj.AddItem("Reference", "System") |> ignore
+        proj.AddItem("Reference", "System.Core") |> ignore
+        proj.AddItem("Reference", "System.Numerics") |> ignore
+        proj.AddItem("Reference", "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a") |> ignore
+        // FSharp targets
+        let pg = proj.Xml.AddPropertyGroup()
+        pg.Condition <- @"Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')"
+        pg.AddProperty("FSharpTargetsPath", @"$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets") |> ignore
+        let fsTargetsImport = proj.Xml.AddImport("$(FSharpTargetsPath)")
+        fsTargetsImport.Condition <- "Exists('$(FSharpTargetsPath)')"
+        // Write
         proj.Save(projFile)
 
     let add (args: Add): unit = failwith "undefined"
     let remove (args: Remove): unit = failwith "undefined"
     let move (args: Move): unit = failwith "undefined"
+
+    let load (path: string): Project = Project(path)
 
   (*
   // Testy test
@@ -140,15 +171,16 @@ let help (): unit = failwith "undefined"
 
 let main (args: string[]): unit =
     match args |> Seq.skip 1 |> List.ofSeq with
-    | "init"::rest -> rest |> Parsers.init |> Project.init
-    | "add"::rest -> rest |> Parsers.add |> Project.add
-    | "remove"::rest -> rest |> Parsers.remove |> Project.remove
-    | "rm"::rest -> rest |> Parsers.remove |> Project.remove
-    | "move"::rest -> rest |> Parsers.move |> Project.move
-    | "mv"::rest -> rest |> Parsers.move |> Project.move
+    | "init"::rest -> rest |> Parsers.init |> NProj.init
+    | "add"::rest -> rest |> Parsers.add |> NProj.add
+    | "remove"::rest -> rest |> Parsers.remove |> NProj.remove
+    | "rm"::rest -> rest |> Parsers.remove |> NProj.remove
+    | "move"::rest -> rest |> Parsers.move |> NProj.move
+    | "mv"::rest -> rest |> Parsers.move |> NProj.move
     | _ -> help()
 
 // TEST!
 //let args = Parsers.init [ "."; "--lang"; "fsharp"; "--type"; "exe" ]
-//Project.init args
+//NProj.init args
 main [| "nproj"; "init";|]
+// xbuild whatever_was_just_produced.fsproj
