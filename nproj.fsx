@@ -1,16 +1,10 @@
 #!/usr/bin/fsharpi --exec
-// Mono's implementation is incomplete, so built from Microsoft's open source.
-// Build steps:
-//   git clone https://github.com/Microsoft/msbuild.git
-//   git checkout xplat
-//   ./build.pl
-// Must reference all the custom assemblies or will fall back to GAC version.
-// TODO make msbuild a submodule
-// TODO doesn't fucking work... can't load a project (;_;)
-#r "../msbuild/bin/Unix/Debug-MONO/Microsoft.Build.dll"
-#r "../msbuild/bin/Unix/Debug-MONO/Microsoft.Build.Framework.dll"
-#r "../msbuild/bin/Unix/Debug-MONO/Microsoft.Build.Tasks.Core.dll"
-#r "../msbuild/bin/Unix/Debug-MONO/Microsoft.Build.Utilities.Core.dll"
+// Mono's implementation is incomplete, so use Microsoft's open sourced MSBuild
+// Fully qualified paths to avoid getting GAC libs
+#r "/home/vagrant/Working/packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.dll"
+#r "/home/vagrant/Working/packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Framework.dll"
+#r "/home/vagrant/Working/packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Tasks.Core.dll"
+#r "/home/vagrant/Working/packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Utilities.Core.dll"
 
 open System
 
@@ -93,6 +87,7 @@ module NProj =
         Path.Combine(path, sprintf "%s%s" name extension)
 
     let init (args: Init): unit =
+        printfn "nproj init: %A" args
         let projFile =
             match args.Path with
             | ProjectFile path -> path
@@ -115,7 +110,7 @@ module NProj =
         proj.SetProperty("TargetFrameworkVersion", "v4.0") |> ignore
         proj.SetProperty("TargetFSharpCoreVersion", "4.3.0.0") |> ignore
         proj.SetProperty("SchemaVersion", "2.0") |> ignore
-        proj.SetProperty("ProjectGuid", Guid.NewGuid() |> sprintf "%A") |> ignore
+        proj.SetProperty("ProjectGuid", Guid.NewGuid() |> sprintf "{%A}") |> ignore
         // Default references
         proj.AddItem("Reference", "mscorlib") |> ignore
         proj.AddItem("Reference", "System") |> ignore
@@ -136,17 +131,6 @@ module NProj =
     let move (args: Move): unit = failwith "undefined"
 
     let load (path: string): Project = Project(path)
-
-  (*
-  // Testy test
-  let sample = "Sample/Sample.fsproj"
-
-  let proj = Project(sample)
-
-  proj.AddItem("Compile", "Test.fs")
-
-  proj.Save()
-    *)
 
 module Parsers =
 
@@ -182,5 +166,10 @@ let main (args: string[]): unit =
 // TEST!
 //let args = Parsers.init [ "."; "--lang"; "fsharp"; "--type"; "exe" ]
 //NProj.init args
-main [| "nproj"; "init";|]
+//main [| "nproj"; "init";|]
 // xbuild whatever_was_just_produced.fsproj
+open Microsoft.Build.Evaluation
+// skipping evaluation fixes issue, but not a good solution?
+//ProjectCollection.GlobalProjectCollection.SkipEvaluation <- true
+let x = Project("FSharp.ProjectTemplate.fsproj")
+//let y = Project("Sample.fsproj")
