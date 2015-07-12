@@ -40,8 +40,23 @@ nproj move <old_filename> <new_filename> --project="."
 nproj mv <old_filename> <new_filename> --project="."
 #+end_src
 
-** Unrelated notes
-*** TODO File bug: in Spacemacs on Ubuntu 14.04, I always get a segfault from the following sequence:
+** Issues
+*** Third party
+Issues with libraries, tooling, etc.
+**** TODO The MSBuild library on NuGet does not work from fsx files, only compiled exes
+The following code prints "30 items" when called from a compiled exe, but "0 items" when called from the fsx.
+#+begin_src fsharp
+#!/usr/bin/fsharpi --exec
+#r "./Microsoft.Build.dll"
+#r "./Microsoft.Build.Framework.dll"
+
+open Microsoft.Build.Evaluation
+
+let file = "/home/vagrant/Working/FSharp.ProjectTemplate.fsproj"
+let proj = Project(file)
+printfn "%A items" proj.Items.Count
+#+end_src
+**** TODO in Spacemacs on Ubuntu 14.04, I always get a segfault from the following sequence:
 + SPC f f (some file)
 + SPC w /
 + SPC f f (some other file)
