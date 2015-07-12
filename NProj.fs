@@ -1,11 +1,3 @@
-#!/usr/bin/fsharpi --exec
-// Mono's implementation is incomplete, so use Microsoft's open sourced MSBuild
-// Fully qualified paths to avoid getting GAC libs
-#r "/home/vagrant/Working/packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.dll"
-#r "/home/vagrant/Working/packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Framework.dll"
-#r "/home/vagrant/Working/packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Tasks.Core.dll"
-#r "/home/vagrant/Working/packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Utilities.Core.dll"
-
 open System
 
 type ProjectPath =
@@ -168,8 +160,9 @@ let main (args: string[]): unit =
 //NProj.init args
 //main [| "nproj"; "init";|]
 // xbuild whatever_was_just_produced.fsproj
-open Microsoft.Build.Evaluation
+
 // skipping evaluation fixes issue, but not a good solution?
 //ProjectCollection.GlobalProjectCollection.SkipEvaluation <- true
-let x = Project("FSharp.ProjectTemplate.fsproj")
-//let y = Project("Sample.fsproj")
+let file = "/home/vagrant/Working/FSharp.ProjectTemplate.fsproj"
+let x = NProj.load(file)
+printfn "%i items" x.Items.Count
