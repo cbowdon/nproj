@@ -1,9 +1,9 @@
-﻿namespace System
+namespace System
 open System.Reflection
 
-[<assembly: AssemblyTitleAttribute("NProjPlaceholder")>]
-[<assembly: AssemblyProductAttribute("NProjPlaceholder")>]
-[<assembly: AssemblyDescriptionAttribute("NProjPlaceholder")>]
+[<assembly: AssemblyTitleAttribute("NProj")>]
+[<assembly: AssemblyProductAttribute("NProj")>]
+[<assembly: AssemblyDescriptionAttribute("NProj")>]
 [<assembly: AssemblyVersionAttribute("1.0")>]
 [<assembly: AssemblyFileVersionAttribute("1.0")>]
 [<assembly: CLSCompliant()>]

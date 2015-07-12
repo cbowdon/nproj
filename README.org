@@ -41,6 +41,20 @@ nproj mv <old_filename> <new_filename> --project="."
 #+end_src
 
 ** Issues
+*** Technical debt
+**** TODO Throw away the prototype
+Consider following structure:
+***** Parser
+Convert command line arguments to types
+***** Resolver
+Lookup project files and infer language
+***** Executor
+Read, modify and write project file
+***** Helper module: Filesystem abstraction
+Wrapping System.IO and enabling testing
+***** Main
+Program flow would be simple: Main -> Parser -> Resolver -> Executor
+**** TODO Tests
 *** Third party
 Issues with libraries, tooling, etc.
 **** TODO The MSBuild library on NuGet does not work from fsx files, only compiled exes

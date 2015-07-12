@@ -118,11 +118,19 @@ module NProj =
         // Write
         proj.Save(projFile)
 
-    let add (args: Add): unit = failwith "undefined"
+    let load (path: string): Project = Project(path)
+
+    let add (args: Add): unit =
+        let projFile =
+            match args.Project with
+            | ProjectFile x -> x
+            | Folder x -> projectFile FSharp x
+        let proj = load projFile
+        failwith "undefined"
+
     let remove (args: Remove): unit = failwith "undefined"
     let move (args: Move): unit = failwith "undefined"
 
-    let load (path: string): Project = Project(path)
 
 module Parsers =
 
@@ -163,6 +171,6 @@ let main (args: string[]): unit =
 
 // skipping evaluation fixes issue, but not a good solution?
 //ProjectCollection.GlobalProjectCollection.SkipEvaluation <- true
-let file = "/home/vagrant/Working/FSharp.ProjectTemplate.fsproj"
+let file = "/home/vagrant/Working/Sample/FSharp.ProjectTemplate.fsproj"
 let x = NProj.load(file)
 printfn "%i items" x.Items.Count
