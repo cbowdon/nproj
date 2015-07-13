@@ -45,9 +45,9 @@ nproj mv <old_filename> <new_filename> --project="."
 **** TODO Throw away the prototype
 Consider following structure:
 ***** Parser
-Convert command line arguments to types
+Convert command line arguments to (weak) types
 ***** Resolver
-Lookup project files and infer language
+Lookup project files and infer language (convert CLI types to domain types)
 ***** Executor
 Read, modify and write project file
 ***** Helper module: Filesystem abstraction

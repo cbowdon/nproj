@@ -43,46 +43,47 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <Reference Include="Microsoft.Build">
-      <HintPath>packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.dll</HintPath>
+      <HintPath>../packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Build.Framework">
-      <HintPath>packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Framework.dll</HintPath>
+      <HintPath>../packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Framework.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Build.Tasks.Core">
-      <HintPath>packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Tasks.Core.dll</HintPath>
+      <HintPath>../packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Tasks.Core.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Build.Utilities.Core">
-      <HintPath>packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Utilities.Core.dll</HintPath>
+      <HintPath>../packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Utilities.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <!-- Need to copy targets and props from MSBuild package to output -->
-    <Content Include="packages/MSBuild.0.1.2/tools/Unix/Microsoft.Common.targets">
+    <Content Include="../packages/MSBuild.0.1.2/tools/Unix/Microsoft.Common.targets">
       <Link>Microsoft.Common.targets</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="packages/MSBuild.0.1.2/tools/Unix/Microsoft.Common.CurrentVersion.targets">
+    <Content Include="../packages/MSBuild.0.1.2/tools/Unix/Microsoft.Common.CurrentVersion.targets">
       <Link>Microsoft.Common.CurrentVersion.targets</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="packages/MSBuild.0.1.2/tools/Unix/Microsoft.NETFramework.props">
+    <Content Include="../packages/MSBuild.0.1.2/tools/Unix/Microsoft.NETFramework.props">
       <Link>Microsoft.NETFramework.props</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="packages/MSBuild.0.1.2/tools/Unix/Microsoft.NETFramework.CurrentVersion.props">
+    <Content Include="../packages/MSBuild.0.1.2/tools/Unix/Microsoft.NETFramework.CurrentVersion.props">
       <Link>Microsoft.NETFramework.CurrentVersion.props</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="packages/MSBuild.0.1.2/tools/Unix/Microsoft.NETFramework.targets">
+    <Content Include="../packages/MSBuild.0.1.2/tools/Unix/Microsoft.NETFramework.targets">
       <Link>Microsoft.NETFramework.targets</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="packages/MSBuild.0.1.2/tools/Unix/Microsoft.NETFramework.CurrentVersion.targets">
+    <Content Include="../packages/MSBuild.0.1.2/tools/Unix/Microsoft.NETFramework.CurrentVersion.targets">
       <Link>Microsoft.NETFramework.CurrentVersion.targets</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cli.fs" />
     <Compile Include="NProj.fs" />
   </ItemGroup>
   <PropertyGroup>
