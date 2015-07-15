@@ -6,9 +6,9 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>33b41d1c-7d30-491a-ba81-ba62e1629a13</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>NProj</RootNamespace>
-    <AssemblyName>NProj</AssemblyName>
+    <OutputType>Library</OutputType>
+    <RootNamespace>NProj.Test</RootNamespace>
+    <AssemblyName>NProj.Test</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
     <Name>NProj</Name>
@@ -42,6 +42,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <Reference Include="System.Runtime, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build">
       <HintPath>../packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.dll</HintPath>
     </Reference>
@@ -53,6 +54,15 @@
     </Reference>
     <Reference Include="Microsoft.Build.Utilities.Core">
       <HintPath>../packages/MSBuild.0.1.2/tools/Unix/Microsoft.Build.Utilities.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.abstractions">
+      <HintPath>../packages/xunit.abstractions.2.0.0/lib/net35/xunit.abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.core">
+      <HintPath>../packages/xunit.extensibility.core.2.0.0/lib/portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS/xunit.core.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.assert">
+      <HintPath>../packages/xunit.assert.2.0.0/lib/portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS/xunit.assert.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -83,11 +93,14 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../NProj/NProj.fsproj">
+      <Project>33b41d1c-7d30-491a-ba81-ba62e1629a13</Project>
+      <Name>NProj</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="CommonTypes.fs" />
-    <Compile Include="Init.fs" />
-    <Compile Include="Add.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="Init.Test.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -96,11 +109,5 @@
     <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
   </PropertyGroup>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-    Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <Import Project="../packages/xunit.core.2.0.0/build/portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS/xunit.core.props" Condition="Exists('packages/xunit.core.2.0.0/build/portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS/xunit.core.props')" />
 </Project>

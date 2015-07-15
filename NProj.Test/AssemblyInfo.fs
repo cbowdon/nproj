@@ -1,9 +1,9 @@
 namespace System
 open System.Reflection
 
-[<assembly: AssemblyTitleAttribute("NProj")>]
-[<assembly: AssemblyProductAttribute("NProj")>]
-[<assembly: AssemblyDescriptionAttribute("NProj")>]
+[<assembly: AssemblyTitleAttribute("NProj.Test")>]
+[<assembly: AssemblyProductAttribute("NProj.Test")>]
+[<assembly: AssemblyDescriptionAttribute("NProj.Test")>]
 [<assembly: AssemblyVersionAttribute("1.0")>]
 [<assembly: AssemblyFileVersionAttribute("1.0")>]
 do ()

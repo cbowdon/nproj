@@ -7,10 +7,10 @@
 ** TODO Initializing a project
 
 #+begin_src
-nproj init <directory="."> --lang=(csharp|fsharp) --type=(library|exe)
+nproj init <path="."> --lang=(csharp|fsharp) --type=(library|exe)
 #+end_src
 
-Creates a new project file for that lang, taking the same name as the given directory. Also will create an AssemblyInfo.
+Creates a new project file for that lang at path. If path is a directory, assume the project file has the same name as the directory. Will also create an AssemblyInfo.
 
 ** TODO Adding source files/references/other files
 
@@ -25,6 +25,12 @@ Action depends on the file extension:
 - anything else will be added as a data file
 
 If it's a source file (*.fs, *.cs) and it doesn't exist, an empty file will be created.
+
+For F# source file ordering matters, so will follow this rule:
+- Program.fs to be the last item if present
+- Successive items will be added to the end (but ahead of Program.fs)
+
+In future it might be nice to parse =open= statements and =namespace=, =module= declarations to calculate the correct ordering.
 
 ** TODO Removing files
 
@@ -43,20 +49,9 @@ nproj mv <old_filename> <new_filename> --project="."
 ** Issues
 *** Technical debt
 **** TODO Throw away the prototype
-Consider following structure:
-***** Parser
-Convert command line arguments to (weak) types
-***** Resolver
-Lookup project files and infer language (convert CLI types to domain types)
-***** Executor
-Read, modify and write project file
-***** Helper module: Filesystem abstraction
-Wrapping System.IO and enabling testing
-***** Main
-Program flow would be simple: Main -> Parser -> Resolver -> Executor
 **** TODO Tests
 *** Third party
-Issues with libraries, tooling, etc.
+Issues with libraries, tooling, etc. Should raise bugs or make fix.
 **** TODO The MSBuild library on NuGet does not work from fsx files, only compiled exes
 The following code prints "30 items" when called from a compiled exe, but "0 items" when called from the fsx.
 #+begin_src fsharp
@@ -70,7 +65,7 @@ let file = "/home/vagrant/Working/FSharp.ProjectTemplate.fsproj"
 let proj = Project(file)
 printfn "%A items" proj.Items.Count
 #+end_src
-**** TODO in Spacemacs on Ubuntu 14.04, I always get a segfault from the following sequence:
+**** TODO in Spacemacs 0.102.x on Ubuntu 14.04, I always get a segfault from the following sequence:
 + SPC f f (some file)
 + SPC w /
 + SPC f f (some other file)

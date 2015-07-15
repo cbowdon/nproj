@@ -1,6 +1,6 @@
 namespace NProj
 
-module Main = 
+module Main =
     open System
 
     type ProjectPath =
