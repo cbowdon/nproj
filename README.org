@@ -1,7 +1,7 @@
 * NProj - a CLI for .NET project management
 
 - Commands for managing .NET project files, with a familiar interface.
-- Current status: prototyping. Focusing on F# support.
+- Current status: transitioning from prototype. Focusing on F# support.
 - N.B. managing NuGet packages intentionally excluded: use nuget.exe or paket.
 
 ** TODO Initializing a project
@@ -46,10 +46,13 @@ nproj move <old_filename> <new_filename> --project="."
 nproj mv <old_filename> <new_filename> --project="."
 #+end_src
 
-** Issues
+** Issues/Todo list
 *** Technical debt
-**** TODO Throw away the prototype
+**** DONE Throw away the prototype
+CLOSED: [2015-07-18 Sat 05:57]
++ Done. Should probably tag last working prototype.
 **** TODO Tests
++ xUnit 2.0 has errors with Mono 4.0.2, awaiting Mono 4.3
 *** Third party
 Issues with libraries, tooling, etc. Should raise bugs or make fix.
 **** TODO The MSBuild library on NuGet does not work from fsx files, only compiled exes
@@ -69,3 +72,4 @@ printfn "%A items" proj.Items.Count
 + SPC f f (some file)
 + SPC w /
 + SPC f f (some other file)
+Might not occur now emacs updated to 24.5?

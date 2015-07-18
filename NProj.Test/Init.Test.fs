@@ -4,6 +4,7 @@ module Parse =
     open System
     open Xunit
     open NProj
+    open NProj.Common
 
     let initArgs = [ [| String.Empty |]]
 
@@ -12,8 +13,8 @@ module Parse =
     let ``Parse init arguments expect success`` (flags: string) =
         // Fixture setup
         let args = flags.Split(',') |> Seq.map (fun f -> f.Trim())
-        let expected = { ProjectFile = { Location = Uri(".") }; Lang = FSharp; Type = Library }
+        let expected: Init.InitCommand = { ProjectFile = { Location = Uri(".") }; Lang = FSharp; Type = Library }
         // Exercise system
-        let actual = Init.Parse args
+        let actual = Init.parse args
         // Verify
         Assert.Equal(expected, actual)

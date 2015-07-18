@@ -1,6 +1,14 @@
 namespace NProj
 
-type Add = { SourceFiles: SourceFile seq
-             ProjectFile: ProjectFile } with
+module Add =
+    open Common
 
-  static member Parse (args: string seq): Add = failwith "undefined"
+    type AddCommand = { SourceFiles: SourceFile seq
+                        ProjectFile: ProjectFile }
+
+    let defaultAdd = { SourceFiles = []
+                       ProjectFile = projectFile "." }
+
+    let parse (args: string seq): AddCommand = failwith "undefined"
+
+    let execute (cmd: AddCommand): unit = failwith "undefined"
