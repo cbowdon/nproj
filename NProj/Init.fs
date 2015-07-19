@@ -4,11 +4,11 @@ module Init =
 
     open Common
 
-    type InitCommand = { ProjectFile: ProjectFile
+    type InitCommand = { ProjectFile: ProjectFileLocation
                          Lang: Language
                          Type: AssemblyType }
 
-    let defaultInit = { ProjectFile = projectFile "."
+    let defaultInit = { ProjectFile = projectFileLocation "."
                         Lang = FSharp
                         Type = Library }
 

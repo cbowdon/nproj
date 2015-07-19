@@ -4,10 +4,10 @@ module Add =
     open Common
 
     type AddCommand = { SourceFiles: SourceFile seq
-                        ProjectFile: ProjectFile }
+                        ProjectFile: ProjectFileLocation }
 
     let defaultAdd = { SourceFiles = []
-                       ProjectFile = projectFile "." }
+                       ProjectFile = projectFileLocation "." }
 
     let parse (args: string seq): AddCommand = failwith "undefined"
 

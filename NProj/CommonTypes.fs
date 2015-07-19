@@ -24,6 +24,10 @@ module Common =
     type ProjectFile = { Location: Uri
                          Exists: bool }
 
+    type ProjectFileLocation =
+    | Directory of Uri
+    | File of Uri
+
     type SourceFile = { Location: Uri
                         Exists: bool }
 
@@ -46,4 +50,11 @@ module Common =
             | Parameter x::rest -> coll rest { result with Arguments = x::result.Arguments }
         coll typedArgs { Arguments = []; Options = Map.empty }
 
-    let projectFile (path: string): ProjectFile = failwith "undefined"
+    let projectFileLocation (path: string): ProjectFileLocation =
+        if File.Exists path
+        then path |> uri |> File
+        else
+            if Directory.Exists path
+            then path |> uri |> Directory
+            else failwith "No such file or directory: %s" path
+
