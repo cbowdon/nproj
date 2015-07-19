@@ -6,7 +6,7 @@ module Parse =
     open NProj
     open NProj.Common
 
-    let initArgs = [ [| String.Empty |]]
+    let parseInit = [ [| String.Empty |]]
 (*
    Tests performed in REPL
 TODO implement proper tests after mono upgrade
@@ -54,5 +54,5 @@ val init5 : Init.InitCommand =
 *)
 
     [<Theory>]
-    [<MemberData("initArgs")>]
+    [<MemberData("parseInit")>]
     let ``Parse init arguments expect success`` (flags: string) = failwith "undefined"

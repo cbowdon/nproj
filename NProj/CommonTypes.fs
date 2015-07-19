@@ -35,12 +35,12 @@ module Common =
 
     let uri path = Uri(path)
 
-    type ProjectFile = { Location: Uri
-                         Exists: bool }
-
     type ProjectFileLocation =
     | Directory of Uri
     | File of Uri
+
+    type ProjectFile = { Location: Uri
+                         Exists: bool }
 
     type SourceFile = { Location: Uri
                         Exists: bool }
@@ -72,4 +72,8 @@ module Common =
             if Directory.Exists path'
             then path' |> uri |> Directory
             else failwith "No such file or directory: %s" path'
+
+    let sourceFile (path: string): SourceFile =
+        let path' = Path.GetFullPath path
+        { Location = uri path'; Exists = File.Exists path' }
 
