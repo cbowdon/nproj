@@ -9,15 +9,29 @@ module Common =
     type Language =
     | CSharp
     | FSharp with
-      member x.Extension: string =
-        match x with
-          | CSharp -> "csproj"
-          | FSharp -> "fsproj"
 
+        member x.Extension: string =
+            match x with
+            | CSharp -> "csproj"
+            | FSharp -> "fsproj"
+
+        static member Parse (x: string): Language option =
+            match x.ToLowerInvariant() with
+            | "csharp" -> Some CSharp
+            | "fsharp" -> Some FSharp
+            | _ -> None
 
     type AssemblyType =
     | Exe
-    | Library
+    | Library with
+
+        static member Parse (x: string): AssemblyType option =
+            match x.ToLowerInvariant() with
+            | "exe" -> Some Exe
+            | "console" -> Some Exe
+            | "lib" -> Some Library
+            | "library" -> Some Library
+            | _ -> None
 
     let uri path = Uri(path)
 
@@ -51,10 +65,11 @@ module Common =
         coll typedArgs { Arguments = []; Options = Map.empty }
 
     let projectFileLocation (path: string): ProjectFileLocation =
-        if File.Exists path
-        then path |> uri |> File
+        let path' = Path.GetFullPath path
+        if File.Exists path'
+        then path' |> uri |> File
         else
-            if Directory.Exists path
-            then path |> uri |> Directory
-            else failwith "No such file or directory: %s" path
+            if Directory.Exists path'
+            then path' |> uri |> Directory
+            else failwith "No such file or directory: %s" path'
 
