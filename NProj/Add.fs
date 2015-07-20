@@ -1,6 +1,10 @@
 namespace NProj
 
 module Add =
+    open System
+    open System.IO
+    open System.Linq
+    open Microsoft.Build.Evaluation
     open Common
 
     type AddCommand = { SourceFiles: SourceFile seq
@@ -23,4 +27,37 @@ module Add =
         [ parseSourceFiles; parseProjectFile ]
         |> Seq.fold (fun acc p -> p raw acc) defaultAdd
 
-    let execute (cmd: AddCommand): unit = failwith "undefined"
+    let projectFileInDir (dir: string): string =
+        match Directory.EnumerateFiles(dir,"*proj") |> List.ofSeq with
+        | [] -> failwith "No project file in directory %s" dir
+        | [x] -> x
+        | _ -> failwith "Multiple project files in directory %s" dir
+
+    let relativePath (project: Project) (path: Uri): string =
+        let projUri = uri project.FullPath
+        let relUri = projUri.MakeRelativeUri(path)
+        relUri.ToString()
+
+    let addSource (project: Project) (source: SourceFile): unit =
+        // Todo create no existent item
+        let items =
+            match source with
+            | Compile x -> project.AddItem("Compile", relativePath project x)
+            | Content x -> project.AddItem("Content", relativePath project x)
+            | Reference x -> project.AddItem("Reference", relativePath project x)
+            | ProjectReference x -> failwith "Adding project references is not yet supported"
+            | Import x -> failwith "Adding imports is not yet supported."
+        // TODO enforce putting Program.fs at end of items
+        items |> ignore
+
+    let execute (cmd: AddCommand): unit =
+        let projectFile =
+            match cmd.ProjectFile with
+            | Directory path -> projectFileInDir path.AbsolutePath
+            | File path -> path.AbsolutePath
+        let project = new Project(projectFile)
+        cmd.SourceFiles |> Seq.iter (addSource project)
+        project.Save()
+
+
+

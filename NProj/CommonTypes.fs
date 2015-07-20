@@ -39,11 +39,12 @@ module Common =
     | Directory of Uri
     | File of Uri
 
-    type ProjectFile = { Location: Uri
-                         Exists: bool }
-
-    type SourceFile = { Location: Uri
-                        Exists: bool }
+    type SourceFile =
+    | Compile of Uri
+    | Content of Uri
+    | Reference of Uri
+    | ProjectReference of Uri
+    | Import of Uri
 
     type Command = { Arguments: string list
                      Options: Map<string,string option> }
@@ -75,5 +76,14 @@ module Common =
 
     let sourceFile (path: string): SourceFile =
         let path' = Path.GetFullPath path
-        { Location = uri path'; Exists = File.Exists path' }
+        let u = uri path'
+        match Path.GetExtension path' with
+        | ".dll" -> Reference u
+        | ".targets" -> Import u
+        | ".props" -> Import u
+        | ".cs" -> Compile u
+        | ".fs" -> Compile u
+        | ".csproj" -> ProjectReference u
+        | ".fsproj" -> ProjectReference u
+        | _ -> Content u
 

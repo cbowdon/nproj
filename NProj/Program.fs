@@ -1,8 +1,13 @@
 open NProj
-open Init
-open Add
 
 [<EntryPoint>]
 let main argv =
-  printfn "%A" argv
-  0
+  try
+    printfn "Arguments: %A" argv
+    // TEST
+    let cmd = Add.parse [ "dummy/test.fs" ]
+    printfn "%A" cmd
+    Add.execute cmd
+    0
+  with
+    | ex -> printfn "Exception: %A" ex; 1
