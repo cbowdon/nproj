@@ -5,7 +5,7 @@ let main argv =
   try
     printfn "Arguments: %A" argv
     // TEST
-    let cmd = Add.parse [ "dummy/test.fs" ]
+    let cmd = Add.parse [ "test.fs" ]
     printfn "%A" cmd
     Add.execute cmd
     0

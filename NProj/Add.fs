@@ -39,13 +39,13 @@ module Add =
         relUri.ToString()
 
     let addSource (project: Project) (source: SourceFile): unit =
-        // Todo create no existent item
+        // TODO Create non-existent item from template
         let items =
             match source with
             | Compile x -> project.AddItem("Compile", relativePath project x)
             | Content x -> project.AddItem("Content", relativePath project x)
             | Reference x -> project.AddItem("Reference", relativePath project x)
-            | ProjectReference x -> failwith "Adding project references is not yet supported"
+            | ProjectReference x -> project.AddItem("ProjectReference", relativePath project x)
             | Import x -> failwith "Adding imports is not yet supported."
         // TODO enforce putting Program.fs at end of items
         items |> ignore
