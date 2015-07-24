@@ -46,13 +46,23 @@ nproj move <old_filename> <new_filename> --project="."
 nproj mv <old_filename> <new_filename> --project="."
 #+end_src
 
+** TODO Converting to project.json
+
+#+begin_src
+nproj convert <project=".">
+#+end_src
+
+The fun part will be building the dependencies JSON, which can probably be achieved with Mono.Cecil.
+
 ** Issues/Todo list
 *** Technical debt
 **** DONE Throw away the prototype
 CLOSED: [2015-07-18 Sat 05:57]
-+ Done. Should probably tag last working prototype.
+Done. Should probably tag last working prototype.
 **** TODO Tests
-+ xUnit 2.0 has errors with Mono 4.0.2, awaiting Mono 4.3
+xUnit 2.0 has errors with Mono 4.0.2, awaiting Mono 4.3
+**** TODO Refactor with CQS project abstraction 
+Microsoft.Build.Evaluation.Project's API is not very reasonable.
 *** Third party
 Issues with libraries, tooling, etc. Should raise bugs or make fix.
 **** TODO The MSBuild library on NuGet does not work from fsx files, only compiled exes
