@@ -63,6 +63,8 @@ Done. Should probably tag last working prototype.
 xUnit 2.0 has errors with Mono 4.0.2, awaiting Mono 4.3
 **** TODO Refactor with CQS project abstraction 
 Microsoft.Build.Evaluation.Project's API is not very reasonable.
+**** TODO Build process
+At least need a makefile...
 *** Third party
 Issues with libraries, tooling, etc. Should raise bugs or make fix.
 **** TODO The MSBuild library on NuGet does not work from fsx files, only compiled exes
