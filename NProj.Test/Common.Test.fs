@@ -6,11 +6,23 @@ module Common =
     open NProj
     open NProj.Common
 
-    let objectArrayOf (args: string list, cmd: Command): Object[] = [| args; cmd |]
+    let projectFileLocationData: Object[] seq =
+        [ (".", "/home/vagrant/Working/NProj.Test/bin/Debug" |> uri |> Directory);
+          ("/home/vagrant/Working/NProj", "/home/vagrant/Working/NProj" |> uri |> Directory);
+          ("/home/vagrant/Working/NProj/NProj.fsproj", "/home/vagrant/Working/NProj/NProj.fsproj" |> uri |> File) ]
+        |> Seq.map (fun (x,y) -> [| x; y |]: Object[])
 
-    let rawCommandParsing: Object[] seq =
-        Seq.map objectArrayOf [
-            ([ "." ], { Arguments = ["."];
+    [<Theory>]
+    [<MemberData("projectFileLocationData")>]
+    let ``projectFileLocation - expect correct datatype`` (path: string) (expected: ProjectFileLocation) =
+        // Fixture setup
+        // Exercise system
+        let result = projectFileLocation path
+        // Verify outcome
+        Assert.Equal(expected, result)
+
+    let collectArgsData: Object[] seq =
+        [   ([ "." ], { Arguments = ["."];
                         Options = Map.empty });
             ([ "."; "--type"; "lib" ], { Arguments = ["."];
                                          Options = Map.ofSeq [("--type", Some "lib")] });
@@ -26,9 +38,10 @@ module Common =
                                                  Options = Map.ofSeq [("--link", None)] });
             ([ "one.fs"; "two.fs"; "--link"; "--project"; "numbers.fsproj" ], { Arguments = ["two.fs"; "one.fs"];
                                                                                 Options = Map.ofSeq [("--link", None); ("--project", Some "numbers.fsproj")] }) ]
+      |> Seq.map (fun (x,y) -> [|x;y|]: Object[])
 
     [<Theory>]
-    [<MemberData("rawCommandParsing")>]
+    [<MemberData("collectArgsData")>]
     let ``collectArgs - expect success`` (raw: string seq) (expected: Command) =
         // Fixture setup
         // Exercise system

@@ -5,12 +5,10 @@ module Add =
     open Xunit
     open NProj
     open NProj.Common
+    open NProj.Add
 
-    let objectArrayOf (x: string list, y: Add.AddCommand): Object[] = [| x; y |]
-
-    let parseAdd =
-      Seq.map objectArrayOf [
-          ( [ "one.fs"], { SourceFiles = [ "/home/vagrant/Working/NProj/one.fs" |> uri |> Compile ];
+    let parseAdd: Object[] seq =
+      [(   [ "one.fs"], { SourceFiles = [ "/home/vagrant/Working/NProj/one.fs" |> uri |> Compile ];
                            ProjectFile = "/home/vagrant/Working/NProj" |> uri |> Directory });
           ( [ "one.fs"; "two.fs" ], { SourceFiles = [ "/home/vagrant/Working/NProj/one.fs" |> uri |> Compile; "/home/vagrant/Working/NProj/two.fs" |> uri |> Compile ];
                                       ProjectFile = "/home/vagrant/Working/NProj" |> uri |> Directory });
@@ -18,12 +16,13 @@ module Add =
                                                         ProjectFile = "/home/vagrant/Working/NProj" |> uri |> Directory });
           ( [ "one.fs"; "two.fs"; "--project"; "../NProj.fsproj" ], { SourceFiles = [ "/home/vagrant/Working/NProj/one.fs" |> uri |> Compile; "/home/vagrant/Working/NProj/two.fs" |> uri |> Compile ];
                                                                       ProjectFile = "/home/vagrant/Working/NProj" |> uri |> Directory }); ]
+      |> Seq.map (fun (x,y) -> [|x;y|]: Object[])
 
     [<Theory>]
     [<MemberData("parseAdd")>]
-    let ``Add.parse - expect success`` (args: string seq) (expected: Add.AddCommand) =
+    let ``parse - expect success`` (args: string seq) (expected: AddCommand) =
         // Fixture setup
         // Exercise system
-        let actual = Add.parse args
+        let actual = parse args
         // Verify outcome
         Assert.Equal(expected, actual)
