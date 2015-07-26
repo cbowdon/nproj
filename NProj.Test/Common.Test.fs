@@ -21,6 +21,27 @@ module Common =
         // Verify outcome
         Assert.Equal(expected, result)
 
+    let sourceFileData: Object[] seq =
+        [ ("one.cs", "one.cs" |> uri |> Compile);
+          ("one.fs", "one.fs" |> uri |> Compile);
+          ("one.csproj", "one.csproj" |> uri |> ProjectReference);
+          ("one.fsproj", "one.fsproj" |> uri |> ProjectReference);
+          ("one.dll", "one.dll" |> uri |> Reference);
+          ("one.css", "one.css" |> uri |> Content);
+          ("one.props", "one.props" |> uri |> Import);
+          ("one.targets", "one.targets" |> uri |> Import); ]
+        |> Seq.map (fun (x,y) -> [| x; y |]: Object[])
+
+    // TODO this test is going to fail, because depends on System.IO.Path.GetFullPath
+    [<Theory>]
+    [<MemberData("sourceFileData")>]
+    let ``sourceFile - expect correct datatype`` (path: string) (expected: SourceFile) =
+        // Fixture setup
+        // Exercise system
+        let result = sourceFile path
+        // Verify outcome
+        Assert.Equal(expected, result)
+
     let collectArgsData: Object[] seq =
         [   ([ "." ], { Arguments = ["."];
                         Options = Map.empty });
