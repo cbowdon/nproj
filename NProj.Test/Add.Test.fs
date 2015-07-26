@@ -21,7 +21,7 @@ module Add =
 
     [<Theory>]
     [<MemberData("parseAdd")>]
-    let ``Parse add arguments expect success`` (args: string seq) (expected: Add.AddCommand) =
+    let ``Add.parse - expect success`` (args: string seq) (expected: Add.AddCommand) =
         // Fixture setup
         // Exercise system
         let actual = Add.parse args

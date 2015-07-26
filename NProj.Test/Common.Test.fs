@@ -6,40 +6,32 @@ module Common =
     open NProj
     open NProj.Common
 
-    let rawCommandParsing: Object[] seq = Seq.empty
+    let objectArrayOf (args: string list, cmd: Command): Object[] = [| args; cmd |]
 
-(*
-   Examples from REPL testing
-let initTest0 = collectArgs [ "." ]
-let initTest1 = collectArgs [ "."; "--type"; "lib" ]
-let initTest2 = collectArgs [ "."; "--lang"; "fsharp"; "--type"; "lib" ]
-let addTest0 = collectArgs [ "one.fs" ]
-let addTest1 = collectArgs [ "one.fs"; "two.fs" ]
-let addTest2 = collectArgs [ "one.fs"; "two.fs"; "--project"; "numbers.fsproj" ]
-let addTest3 = collectArgs [ "one.fs"; "two.fs"; "--link" ]
-let addTest4 = collectArgs [ "one.fs"; "two.fs"; "--link"; "--project"; "numbers.fsproj" ]
-
-val initTest0 : Command = {Arguments = ["."];
-                           Options = map [];}
-val initTest1 : Command = {Arguments = ["."];
-                           Options = map [("--type", Some "lib")];}
-val initTest2 : Command =
-  {Arguments = ["."];
-   Options = map [("--lang", Some "fsharp"); ("--type", Some "lib")];}
-val addTest0 : Command = {Arguments = ["one.fs"];
-                          Options = map [];}
-val addTest1 : Command = {Arguments = ["two.fs"; "one.fs"];
-                          Options = map [];}
-val addTest2 : Command =
-  {Arguments = ["two.fs"; "one.fs"];
-   Options = map [("--project", Some "numbers.fsproj")];}
-val addTest3 : Command = {Arguments = ["two.fs"; "one.fs"];
-                          Options = map [("--link", null)];}
-val addTest4 : Command =
-  {Arguments = ["two.fs"; "one.fs"];
-   Options = map [("--link", null); ("--project", Some "numbers.fsproj")];}
-*)
+    let rawCommandParsing: Object[] seq =
+        Seq.map objectArrayOf [
+            ([ "." ], { Arguments = ["."];
+                        Options = Map.empty });
+            ([ "."; "--type"; "lib" ], { Arguments = ["."];
+                                         Options = Map.ofSeq [("--type", Some "lib")] });
+            ([ "."; "--lang"; "fsharp"; "--type"; "lib" ], { Arguments = ["."];
+                                                             Options = Map.ofSeq [("--lang", Some "fsharp"); ("--type", Some "lib")] });
+            ([ "one.fs" ], { Arguments = ["one.fs"];
+                             Options = Map.empty });
+            ([ "one.fs"; "two.fs" ], { Arguments = ["two.fs"; "one.fs"];
+                                       Options = Map.empty });
+            ([ "one.fs"; "two.fs"; "--project"; "numbers.fsproj" ], { Arguments = ["two.fs"; "one.fs"];
+                                                                      Options = Map.ofSeq [("--project", Some "numbers.fsproj")] });
+            ([ "one.fs"; "two.fs"; "--link" ], { Arguments = ["two.fs"; "one.fs"];
+                                                 Options = Map.ofSeq [("--link", None)] });
+            ([ "one.fs"; "two.fs"; "--link"; "--project"; "numbers.fsproj" ], { Arguments = ["two.fs"; "one.fs"];
+                                                                                Options = Map.ofSeq [("--link", None); ("--project", Some "numbers.fsproj")] }) ]
 
     [<Theory>]
     [<MemberData("rawCommandParsing")>]
-    let ``Parse raw commands - expect correct`` (raw: string seq) (expected: Command) = failwith "undefined"
+    let ``collectArgs - expect success`` (raw: string seq) (expected: Command) =
+        // Fixture setup
+        // Exercise system
+        let result = collectArgs raw
+        // Verify outcome
+        Assert.Equal(expected, result)
