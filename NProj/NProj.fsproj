@@ -87,6 +87,7 @@
     <Compile Include="CommonTypes.fs" />
     <Compile Include="Init.fs" />
     <Compile Include="Add.fs" />
+    <Compile Include="IO.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <PropertyGroup>

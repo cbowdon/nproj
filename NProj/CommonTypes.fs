@@ -9,7 +9,6 @@ module Common =
     type Language =
     | CSharp
     | FSharp with
-
         member x.Extension: string =
             match x with
             | CSharp -> "csproj"
@@ -24,7 +23,6 @@ module Common =
     type AssemblyType =
     | Exe
     | Library with
-
         static member Parse (x: string): AssemblyType option =
             match x.ToLowerInvariant() with
             | "exe" -> Some Exe
