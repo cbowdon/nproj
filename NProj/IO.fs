@@ -2,6 +2,8 @@ namespace NProj
 
 module IO =
 
+    open System.IO
+
     type Disk<'a> =
     | FullPath of string * (string -> 'a)
     | FileExists of string * (bool -> 'a)
@@ -33,6 +35,15 @@ module IO =
     let fullPath (path: string): FreeDisk<string> = FullPath (path, id) |> FreeDisk.lift
     let fileExists (path: string): FreeDisk<bool> = FileExists (path, id) |> FreeDisk.lift
     let directoryExists (path: string): FreeDisk<bool> = DirectoryExists (path, id) |> FreeDisk.lift
+
+    let rec interpret (fd: FreeDisk<'a>): 'a =
+        match fd with
+        | Pure a -> a
+        | Roll d ->
+            match d with
+            | FullPath (p, f) -> p |> Path.GetFullPath |> f |> interpret
+            | FileExists (p, f) -> p |> File.Exists |> f |> interpret
+            | DirectoryExists (p, f) -> p |> Directory.Exists |> f |> interpret
 
     (* example
     let x = disk { let! fp = fullPath "."
