@@ -3,8 +3,8 @@ namespace NProj
 module Common =
 
     open System
-    open System.IO
     open System.Linq
+    open NProj.IO
 
     type Language =
     | CSharp
@@ -63,25 +63,29 @@ module Common =
             | Parameter x::rest -> coll rest { result with Arguments = x::result.Arguments }
         coll typedArgs { Arguments = []; Options = Map.empty }
 
-    let projectFileLocation (path: string): ProjectFileLocation =
-        let path' = Path.GetFullPath path
-        if File.Exists path'
-        then path' |> uri |> File
-        else
-            if Directory.Exists path'
-            then path' |> uri |> Directory
-            else failwith "No such file or directory: %s" path'
+    let projectFileLocation (path: string): FreeDisk<ProjectFileLocation> =
+        disk { let! path' = fullPath path
+               let! isFile = fileExists path'
+               let! isDirectory = directoryExists path'
+               if isFile
+               then return path' |> uri |> File
+               else
+                   if isDirectory
+                   then return path' |> uri |> Directory
+                   else
+                       return failwith "No such file or directory: %s" path' }
 
-    let sourceFile (path: string): SourceFile =
-        let path' = Path.GetFullPath path
-        let u = uri path'
-        match Path.GetExtension path' with
-        | ".dll" -> Reference u
-        | ".targets" -> Import u
-        | ".props" -> Import u
-        | ".cs" -> Compile u
-        | ".fs" -> Compile u
-        | ".csproj" -> ProjectReference u
-        | ".fsproj" -> ProjectReference u
-        | _ -> Content u
-
+    let sourceFile (path: string): FreeDisk<SourceFile> =
+        disk { let! path' = fullPath path
+               let u = uri path'
+               let! ext = extension path'
+               return
+                   match ext with
+                   | ".dll" -> Reference u
+                   | ".targets" -> Import u
+                   | ".props" -> Import u
+                   | ".cs" -> Compile u
+                   | ".fs" -> Compile u
+                   | ".csproj" -> ProjectReference u
+                   | ".fsproj" -> ProjectReference u
+                   | _ -> Content u }

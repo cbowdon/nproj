@@ -2,36 +2,46 @@ namespace NProj
 
 module Add =
     open System
-    open System.IO
     open System.Linq
     open Microsoft.Build.Evaluation
-    open Common
+    open NProj.Common
+    open NProj.IO
 
     type AddCommand = { SourceFiles: SourceFile seq
                         ProjectFile: ProjectFileLocation }
 
-    let defaultAdd = { SourceFiles = []
-                       ProjectFile = projectFileLocation "." }
+    let defaultAdd =
+        disk { let! pf = projectFileLocation "."
+               return { SourceFiles = []; ProjectFile = pf } }
 
-    let parseSourceFiles (raw: Command) (cmd: AddCommand) =
-        { cmd with SourceFiles = raw.Arguments |> List.map sourceFile }
+    let parseSourceFiles (raw: Command) (cmd: FreeDisk<AddCommand>) =
+        disk { let! cmd' = cmd
+               let! sourceFiles =
+                   raw.Arguments
+                   |> List.map sourceFile
+                   |> FreeDisk.sequence
+               return { cmd' with SourceFiles = sourceFiles } }
 
-    let parseProjectFile (raw: Command) (cmd: AddCommand) =
-        match Map.tryFind "--project" raw.Options with
-        | None -> cmd
-        | Some None -> failwith "The flag \"--project\" requires an argument"
-        | Some (Some x) -> { cmd with ProjectFile = projectFileLocation x }
+    let parseProjectFile (raw: Command) (cmd: FreeDisk<AddCommand>) =
+        disk { let! cmd' = cmd
+               match Map.tryFind "--project" raw.Options with
+               | None -> return cmd'
+               | Some None -> return failwith "The flag \"--project\" requires an argument"
+               | Some (Some x) ->
+                    let! pfl = projectFileLocation x
+                    return { cmd' with ProjectFile = pfl } }
 
-    let parse (args: string seq): AddCommand =
+    let parse (args: string seq): FreeDisk<AddCommand> =
         let raw = collectArgs args
         [ parseSourceFiles; parseProjectFile ]
         |> Seq.fold (fun acc p -> p raw acc) defaultAdd
 
-    let projectFileInDir (dir: string): string =
-        match Directory.EnumerateFiles(dir, "*proj") |> List.ofSeq with
-        | [] -> failwith "No project file in directory %s" dir
-        | [x] -> x
-        | _ -> failwith "Multiple project files in directory %s" dir
+    let projectFileInDir (dir: string): FreeDisk<string> =
+        disk { let! files = listFiles dir (Some "*proj")
+               match List.ofSeq files with
+               | [] -> return failwith "No project file in directory %s" dir
+               | [x] -> return x
+               | _ -> return failwith "Multiple project files in directory %s" dir }
 
     let relativePath (project: Project) (path: Uri): string =
         let projUri = uri project.FullPath
@@ -40,14 +50,14 @@ module Add =
 
     let isProgramFs (item: ProjectItem): bool =
         item.EvaluatedInclude
-        |> Path.GetFileName
+        |> System.IO.Path.GetFileName
         |> (=) "Program.fs"
 
     let addSource (project: Project) (source: SourceFile): unit =
         // TODO Create non-existent item from template?
         let items =
             match source with
-            | Compile x -> project.AddItem("Compile", relativePath project x) 
+            | Compile x -> project.AddItem("Compile", relativePath project x)
             | Content x -> project.AddItem("Content", relativePath project x)
             | Reference x -> project.AddItem("Reference", relativePath project x)
             | ProjectReference x -> project.AddItem("ProjectReference", relativePath project x)
@@ -62,15 +72,12 @@ module Add =
             project.RemoveItem(p) |> ignore
             project.AddItemFast("Compile", p.EvaluatedInclude) |> ignore
 
-    let execute (cmd: AddCommand): unit =
-        let projectFile =
-            match cmd.ProjectFile with
-            | Directory path -> projectFileInDir path.AbsolutePath
-            | File path -> path.AbsolutePath
-        let project = new Project(projectFile)
-        cmd.SourceFiles |> Seq.iter (addSource project)
-        moveProgramFsToEnd project
-        project.Save()
-
-
-
+    let execute (cmd: AddCommand): FreeDisk<unit> =
+        disk { let! projectFile =
+                   match cmd.ProjectFile with
+                   | Directory path -> projectFileInDir path.AbsolutePath
+                   | File path -> Pure path.AbsolutePath
+               let project = new Project(projectFile)
+               cmd.SourceFiles |> Seq.iter (addSource project)
+               moveProgramFsToEnd project
+               project.Save() }
