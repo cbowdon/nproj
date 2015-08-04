@@ -4,6 +4,7 @@ module Common =
     open System
     open Xunit
     open NProj
+    open NProj.IO
     open NProj.Common
 
     let projectFileLocationData: Object[] seq =
@@ -19,7 +20,7 @@ module Common =
         // Exercise system
         let result = projectFileLocation path
         // Verify outcome
-        Assert.Equal(expected, result)
+        Assert.Equal(Pure expected, result)
 
     let sourceFileData: Object[] seq =
         [ ("one.cs", "one.cs" |> uri |> Compile);
@@ -40,7 +41,7 @@ module Common =
         // Exercise system
         let result = sourceFile path
         // Verify outcome
-        Assert.Equal(expected, result)
+        Assert.Equal(Pure expected, result)
 
     let collectArgsData: Object[] seq =
         [   ([ "." ], { Arguments = ["."];
