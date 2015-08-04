@@ -47,8 +47,6 @@ module Init =
         FreeDisk.liftM parseType' cmd
 
     let parse (args: string seq): FreeDisk<InitCommand> =
-        let raw = collectArgs args
-        [ parseProjectFile; parseLang; parseType ]
-        |> Seq.fold (fun acc p -> p raw acc) defaultInit
+        foldParsers [ parseProjectFile; parseLang; parseType ] defaultInit args
 
     let execute (cmd: InitCommand): unit = failwith "undefined"

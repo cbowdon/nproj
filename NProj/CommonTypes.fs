@@ -63,6 +63,12 @@ module Common =
             | Parameter x::rest -> coll rest { result with Arguments = x::result.Arguments }
         coll typedArgs { Arguments = []; Options = Map.empty }
 
+    type Parser<'a> = Command -> FreeDisk<'a> -> FreeDisk<'a>
+
+    let foldParsers (parsers: seq<Parser<'a>>) (defolt: FreeDisk<'a>) (args: string seq): FreeDisk<'a> =
+        let raw = collectArgs args
+        parsers |> Seq.fold (fun acc p -> p raw acc) defolt
+
     let projectFileLocation (path: string): FreeDisk<ProjectFileLocation> =
         disk { let! path' = fullPath path
                let! isFile = fileExists path'

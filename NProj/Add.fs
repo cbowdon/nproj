@@ -32,9 +32,7 @@ module Add =
                     return { cmd' with ProjectFile = pfl } }
 
     let parse (args: string seq): FreeDisk<AddCommand> =
-        let raw = collectArgs args
-        [ parseSourceFiles; parseProjectFile ]
-        |> Seq.fold (fun acc p -> p raw acc) defaultAdd
+        foldParsers [ parseSourceFiles; parseProjectFile ] defaultAdd args
 
     let projectFileInDir (dir: string): FreeDisk<string> =
         disk { let! files = listFiles dir (Some "*proj")
