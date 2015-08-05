@@ -41,9 +41,10 @@ module Add =
                | [x] -> return x
                | _ -> return failwith "Multiple project files in directory %s" dir }
 
-    let relativePath (project: Project) (path: Uri): string =
-        let projUri = uri project.FullPath
-        let relUri = projUri.MakeRelativeUri(path)
+    let relativePath (project: Project) (path: string): string =
+        let pathUri = Uri(path)
+        let projUri = Uri(project.FullPath)
+        let relUri = projUri.MakeRelativeUri(pathUri)
         relUri.ToString()
 
     let isProgramFs (item: ProjectItem): bool =
@@ -73,8 +74,8 @@ module Add =
     let execute (cmd: AddCommand): FreeDisk<unit> =
         disk { let! projectFile =
                    match cmd.ProjectFile with
-                   | Directory path -> projectFileInDir path.AbsolutePath
-                   | File path -> Pure path.AbsolutePath
+                   | Directory path -> projectFileInDir path
+                   | File path -> Pure path
                let project = new Project(projectFile)
                cmd.SourceFiles |> Seq.iter (addSource project)
                moveProgramFsToEnd project

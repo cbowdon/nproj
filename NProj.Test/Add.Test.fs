@@ -9,14 +9,14 @@ module Add =
     open NProj.Add
 
     let parseAdd: Object[] seq =
-      [   ( [ "one.fs"], { SourceFiles = [ "/home/vagrant/Working/NProj/one.fs" |> uri |> Compile ];
-                           ProjectFile = "/home/vagrant/Working/NProj" |> uri |> Directory });
-          ( [ "one.fs"; "two.fs" ], { SourceFiles = [ "/home/vagrant/Working/NProj/one.fs" |> uri |> Compile; "/home/vagrant/Working/NProj/two.fs" |> uri |> Compile ];
-                                      ProjectFile = "/home/vagrant/Working/NProj" |> uri |> Directory });
-          ( [ "one.fs"; "two.fs"; "--project"; "." ], { SourceFiles = [ "/home/vagrant/Working/NProj/one.fs" |> uri |> Compile; "/home/vagrant/Working/NProj/two.fs" |> uri |> Compile ];
-                                                        ProjectFile = "/home/vagrant/Working/NProj" |> uri |> Directory });
-          ( [ "one.fs"; "two.fs"; "--project"; "../NProj.fsproj" ], { SourceFiles = [ "/home/vagrant/Working/NProj/one.fs" |> uri |> Compile; "/home/vagrant/Working/NProj/two.fs" |> uri |> Compile ];
-                                                                      ProjectFile = "/home/vagrant/Working/NProj" |> uri |> Directory }); ]
+      [   ( [ "one.fs"], { SourceFiles = [ Compile "/home/vagrant/Working/NProj/one.fs" ];
+                           ProjectFile = Directory "/home/vagrant/Working/NProj" });
+          ( [ "one.fs"; "two.fs" ], { SourceFiles = [ Compile "/home/vagrant/Working/NProj/one.fs"; Compile "/home/vagrant/Working/NProj/two.fs" ];
+                                      ProjectFile = Directory "/home/vagrant/Working/NProj" });
+          ( [ "one.fs"; "two.fs"; "--project"; "." ], { SourceFiles = [ Compile "/home/vagrant/Working/NProj/one.fs"; Compile "/home/vagrant/Working/NProj/two.fs" ];
+                                                        ProjectFile = Directory "/home/vagrant/Working/NProj" });
+          ( [ "one.fs"; "two.fs"; "--project"; "../NProj.fsproj" ], { SourceFiles = [ Compile "/home/vagrant/Working/NProj/one.fs"; Compile "/home/vagrant/Working/NProj/two.fs" ];
+                                                                      ProjectFile = Directory "/home/vagrant/Working/NProj" }); ]
       |> Seq.map (fun (x,y) -> [|x;y|]: Object[])
 
     [<Theory>]

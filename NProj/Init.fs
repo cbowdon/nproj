@@ -53,8 +53,8 @@ module Init =
 
     let name (project: ProjectFileLocation): string =
         match project with
-        | Directory x -> x.AbsolutePath |> System.IO.Path.GetDirectoryName
-        | File x -> x.AbsolutePath |> System.IO.Path.GetFileNameWithoutExtension
+        | Directory x -> System.IO.Path.GetDirectoryName x
+        | File x -> System.IO.Path.GetFileNameWithoutExtension x
 
     let execute (cmd: InitCommand): unit =
         let name = name cmd.ProjectFile
@@ -93,5 +93,5 @@ module Init =
         let saveLocation =
             match cmd.ProjectFile with
             | File x -> x
-            | Directory x -> Uri(x, cmd.Lang.Extension |> sprintf "%s.%s" name)
-        proj.Save(saveLocation.AbsolutePath)
+            | Directory x -> System.IO.Path.Combine(x, cmd.Lang.Extension |> sprintf "%s.%s" name)
+        proj.Save(saveLocation)

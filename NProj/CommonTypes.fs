@@ -31,18 +31,16 @@ module Common =
             | "library" -> Some Library
             | _ -> None
 
-    let uri path = Uri(path)
-
     type ProjectFileLocation =
-    | Directory of Uri
-    | File of Uri
+    | Directory of string
+    | File of string
 
     type SourceFile =
-    | Compile of Uri
-    | Content of Uri
-    | Reference of Uri
-    | ProjectReference of Uri
-    | Import of Uri
+    | Compile of string
+    | Content of string
+    | Reference of string
+    | ProjectReference of string
+    | Import of string
 
     type Command = { Arguments: string list
                      Options: Map<string,string option> }
@@ -74,24 +72,23 @@ module Common =
                let! isFile = fileExists path'
                let! isDirectory = directoryExists path'
                if isFile
-               then return path' |> uri |> File
+               then return File path'
                else
                    if isDirectory
-                   then return path' |> uri |> Directory
+                   then return Directory path'
                    else
                        return failwith "No such file or directory: %s" path' }
 
     let sourceFile (path: string): FreeDisk<SourceFile> =
         disk { let! path' = fullPath path
-               let u = uri path'
                let! ext = extension path'
                return
                    match ext with
-                   | ".dll" -> Reference u
-                   | ".targets" -> Import u
-                   | ".props" -> Import u
-                   | ".cs" -> Compile u
-                   | ".fs" -> Compile u
-                   | ".csproj" -> ProjectReference u
-                   | ".fsproj" -> ProjectReference u
-                   | _ -> Content u }
+                   | ".dll" -> Reference path'
+                   | ".targets" -> Import path'
+                   | ".props" -> Import path'
+                   | ".cs" -> Compile path'
+                   | ".fs" -> Compile path'
+                   | ".csproj" -> ProjectReference path'
+                   | ".fsproj" -> ProjectReference path'
+                   | _ -> Content path' }
