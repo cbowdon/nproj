@@ -85,8 +85,6 @@ module Init =
                 { project with
                       Properties = project.Properties
                                    |> Map.add "TargetFSharpCoreVersion" "4.3.0.0"
-                                   |> Map.add "FSharpTargetsPath" @"$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets"
-                      Items = Seq.append project.Items [ Reference "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
-                                                         Import "$(FSharpTargetsPath)" ] }
+                      Items = Seq.append project.Items [ Reference "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" ] }
 
         Project.create project' |> writeProjectFile
