@@ -67,6 +67,7 @@ module Common =
         let raw = collectArgs args
         parsers |> Seq.fold (fun acc p -> p raw acc) defolt
 
+    // TODO doesn't support naming a new file
     let projectFileLocation (path: string): FreeDisk<ProjectFileLocation> =
         disk { let! path' = fullPath path
                let! isFile = fileExists path'
@@ -77,7 +78,7 @@ module Common =
                    if isDirectory
                    then return Directory path'
                    else
-                       return failwith "No such file or directory: %s" path' }
+                       return sprintf "No such file or directory: %s" path' |> failwith }
 
     let sourceFile (path: string): FreeDisk<SourceFile> =
         disk { let! path' = fullPath path

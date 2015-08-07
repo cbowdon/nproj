@@ -3,6 +3,7 @@ namespace NProj
 module IO =
 
     open System.IO
+    open Microsoft.Build.Evaluation
 
     type Disk<'a> =
     | FullPath of string * (string -> 'a)
@@ -10,6 +11,7 @@ module IO =
     | DirectoryExists of string * (bool -> 'a)
     | Extension of string * (string -> 'a)
     | ListFiles of string * string option * (string seq -> 'a)
+    | WriteProjectFile of Project * 'a
     with
         static member fmap (f: 'a -> 'b) (x: Disk<'a>): Disk<'b> =
             match x with
@@ -18,6 +20,7 @@ module IO =
             | DirectoryExists (p, f') -> DirectoryExists (p, f' >> f)
             | Extension (p, f') -> Extension (p, f' >> f)
             | ListFiles (p, pattern, f') -> ListFiles (p, pattern, f' >> f)
+            | WriteProjectFile (proj, a) -> WriteProjectFile (proj, f a)
 
     type FreeDisk<'a> =
     | Pure of 'a
@@ -49,6 +52,7 @@ module IO =
     type DiskBuilder() =
         member this.Bind(freeDisk, f) = FreeDisk.bind f freeDisk
         member this.Return(x) = Pure x
+        member this.ReturnFrom(m) = m
         member this.Zero() = Pure ()
     let disk = DiskBuilder()
 
@@ -57,6 +61,7 @@ module IO =
     let directoryExists (path: string): FreeDisk<bool> = DirectoryExists (path, id) |> FreeDisk.lift
     let extension (path: string): FreeDisk<string> = Extension (path, id) |> FreeDisk.lift
     let listFiles (path: string) (pattern: string option): FreeDisk<string seq> = ListFiles (path, pattern, id) |> FreeDisk.lift
+    let writeProjectFile (project: Project): FreeDisk<unit> = WriteProjectFile (project, ()) |> FreeDisk.lift
 
     let rec interpret (fd: FreeDisk<'a>): 'a =
         match fd with
@@ -73,3 +78,4 @@ module IO =
                     | None -> "*"
                     | Some x -> x
                 Directory.EnumerateFiles(p, pattern') |> f |> interpret
+            | WriteProjectFile (proj, a) -> proj.Save(); a |> interpret

@@ -21,7 +21,7 @@ module Init =
                match raw.Arguments with
                | [] -> return cmd'
                | [x] ->
-                    let! pfl = projectFileLocation "."
+                    let! pfl = projectFileLocation x
                     return { cmd' with ProjectFile = pfl }
                | _ -> return failwith "Too many arguments specified; expected one." }
 
@@ -55,7 +55,7 @@ module Init =
         | Directory x -> System.IO.Path.GetDirectoryName x
         | File x -> System.IO.Path.GetFileNameWithoutExtension x
 
-    let execute (cmd: InitCommand): unit =
+    let execute (cmd: InitCommand): FreeDisk<unit> =
         let name = projectName cmd.ProjectFile
 
         let project = { ProjectFilePath = match cmd.ProjectFile with
@@ -89,4 +89,4 @@ module Init =
                       Items = Seq.append project.Items [ Reference "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
                                                          Import "$(FSharpTargetsPath)" ] }
 
-        Project.create project'
+        Project.create project' |> writeProjectFile
