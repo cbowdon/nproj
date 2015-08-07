@@ -3,9 +3,11 @@ namespace NProj
 module Add =
     open System
     open System.Linq
+    // TODO should this even be accessible?
     open Microsoft.Build.Evaluation
     open NProj.Common
     open NProj.IO
+    open NProj.Project
 
     type AddCommand = { SourceFiles: SourceFile seq
                         ProjectFile: ProjectFileLocation }
@@ -41,35 +43,19 @@ module Add =
                | [x] -> return x
                | _ -> return failwith "Multiple project files in directory %s" dir }
 
-    let relativePath (project: Project) (path: string): string =
-        let pathUri = Uri(path)
-        let projUri = Uri(project.FullPath)
-        let relUri = projUri.MakeRelativeUri(pathUri)
-        relUri.ToString()
-
-    let isProgramFs (item: ProjectItem): bool =
-        item.EvaluatedInclude
-        |> System.IO.Path.GetFileName
-        |> (=) "Program.fs"
-
-    let addSource (project: Project) (source: SourceFile): unit =
-        // TODO Create non-existent item from template?
-        let items =
-            match source with
-            | Compile x -> project.AddItem("Compile", relativePath project x)
-            | Content x -> project.AddItem("Content", relativePath project x)
-            | Reference x -> project.AddItem("Reference", relativePath project x)
-            | ProjectReference x -> project.AddItem("ProjectReference", relativePath project x)
-            | Import x -> failwith "Adding imports is not yet supported."
-        items |> ignore
-
+    // TODO should this live in NProj.Project?
     let moveProgramFsToEnd (project: Project): unit =
+        let isProgramFs (item: ProjectItem): bool =
+            item.EvaluatedInclude
+            |> System.IO.Path.GetFileName
+            |> (=) "Program.fs"
         let programFs = project.GetItems("Compile") |> Seq.tryFind isProgramFs
         match programFs with
         | None -> ()
         | Some p ->
             project.RemoveItem(p) |> ignore
             project.AddItemFast("Compile", p.EvaluatedInclude) |> ignore
+            project.Save()
 
     let execute (cmd: AddCommand): FreeDisk<unit> =
         disk { let! projectFile =
@@ -77,6 +63,5 @@ module Add =
                    | Directory path -> projectFileInDir path
                    | File path -> Pure path
                let project = new Project(projectFile)
-               cmd.SourceFiles |> Seq.iter (addSource project)
-               moveProgramFsToEnd project
-               project.Save() }
+               cmd.SourceFiles |> Seq.iter (addItem project)
+               moveProgramFsToEnd project }

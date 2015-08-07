@@ -2,10 +2,9 @@ namespace NProj
 
 module Init =
 
-    open System
-    open Microsoft.Build.Evaluation
-    open Common
-    open IO
+    open NProj.Common
+    open NProj.IO
+    open NProj.Project
 
     type InitCommand = { ProjectFile: ProjectFileLocation
                          Lang: Language
@@ -51,47 +50,43 @@ module Init =
     let parse (args: string seq): FreeDisk<InitCommand> =
         foldParsers [ parseProjectFile; parseLang; parseType ] defaultInit args
 
-    let name (project: ProjectFileLocation): string =
+    let projectName (project: ProjectFileLocation): string =
         match project with
         | Directory x -> System.IO.Path.GetDirectoryName x
         | File x -> System.IO.Path.GetFileNameWithoutExtension x
 
     let execute (cmd: InitCommand): unit =
-        let name = name cmd.ProjectFile
-        let proj = Project()
-        proj.Xml.DefaultTargets <- "Build"
-        // Imports
-        let commonPropImport = proj.Xml.AddImport("$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props")
-        commonPropImport.Condition <- "Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"
-        // Properties
-        proj.SetProperty("Language", sprintf "%A" cmd.Lang) |> ignore
-        proj.SetProperty("OutputType", sprintf "%A" cmd.Type) |> ignore
-        proj.SetProperty("Name", name) |> ignore
-        proj.SetProperty("RootNamespace", name) |> ignore
-        proj.SetProperty("AssemblyName", name) |> ignore
-        proj.SetProperty("SchemaVersion", "2.0") |> ignore
-        proj.SetProperty("ProjectGuid", Guid.NewGuid() |> sprintf "{%A}") |> ignore
-        // Default references
-        proj.AddItem("Reference", "mscorlib") |> ignore
-        proj.AddItem("Reference", "System") |> ignore
-        proj.AddItem("Reference", "System.Core") |> ignore
-        proj.AddItem("Reference", "System.Numerics") |> ignore
-        if cmd.Lang = FSharp
-        then
-            // Properties
-            proj.SetProperty("TargetFrameworkVersion", "v4.0") |> ignore
-            proj.SetProperty("TargetFSharpCoreVersion", "4.3.0.0") |> ignore
-            // References
-            proj.AddItem("Reference", "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a") |> ignore
-            // Targets
-            let pg = proj.Xml.AddPropertyGroup()
-            pg.Condition <- @"Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')"
-            pg.AddProperty("FSharpTargetsPath", @"$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets") |> ignore
-            let fsTargetsImport = proj.Xml.AddImport("$(FSharpTargetsPath)")
-            fsTargetsImport.Condition <- "Exists('$(FSharpTargetsPath)')"
-        else ()
-        let saveLocation =
-            match cmd.ProjectFile with
-            | File x -> x
-            | Directory x -> System.IO.Path.Combine(x, cmd.Lang.Extension |> sprintf "%s.%s" name)
-        proj.Save(saveLocation)
+        let name = projectName cmd.ProjectFile
+
+        let project = { ProjectFilePath = match cmd.ProjectFile with
+                                          | File x -> x
+                                          | Directory x -> System.IO.Path.Combine(x, cmd.Lang.Extension |> sprintf "%s.%s" name)
+
+                        Properties = Map.ofSeq [ ("Language", sprintf "%A" cmd.Lang)
+                                                 ("OutputType", sprintf "%A" cmd.Type)
+                                                 ("Name", name)
+                                                 ("RootNamespace", name)
+                                                 ("AssemblyName", name)
+                                                 ("SchemaVersion", "2.0")
+                                                 ("ProjectGuid", System.Guid.NewGuid().ToString())
+                                                 ("TargetFrameworkVersion", "v4.0") ]
+
+                        Items = [ Import @"$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
+                                  Reference "mscorlib"
+                                  Reference "System"
+                                  Reference "System.Core"
+                                  Reference "System.Numerics" ] }
+
+        // Add language specific items and properties
+        let project' =
+            match cmd.Lang with
+            | CSharp -> project
+            | FSharp ->
+                { project with
+                      Properties = project.Properties
+                                   |> Map.add "TargetFSharpCoreVersion" "4.3.0.0"
+                                   |> Map.add "FSharpTargetsPath" @"$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets"
+                      Items = Seq.append project.Items [ Reference "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+                                                         Import "$(FSharpTargetsPath)" ] }
+
+        Project.create project'
