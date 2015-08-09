@@ -6,34 +6,7 @@ module Common =
     open System.Linq
     open NProj.IO
 
-    type Language =
-    | CSharp
-    | FSharp with
-        member x.Extension: string =
-            match x with
-            | CSharp -> "csproj"
-            | FSharp -> "fsproj"
-
-        static member Parse (x: string): Language option =
-            match x.ToLowerInvariant() with
-            | "csharp" -> Some CSharp
-            | "fsharp" -> Some FSharp
-            | _ -> None
-
-    type AssemblyType =
-    | Exe
-    | Library with
-        static member Parse (x: string): AssemblyType option =
-            match x.ToLowerInvariant() with
-            | "exe" -> Some Exe
-            | "console" -> Some Exe
-            | "lib" -> Some Library
-            | "library" -> Some Library
-            | _ -> None
-
-    type ProjectFileLocation =
-    | Directory of string
-    | File of string
+    type ProjectFileLocation = Directory of string
 
     type SourceFile =
     | Compile of string
@@ -69,16 +42,9 @@ module Common =
 
     // TODO doesn't support naming a new file
     let projectFileLocation (path: string): FreeDisk<ProjectFileLocation> =
-        disk { let! path' = fullPath path
-               let! isFile = fileExists path'
-               let! isDirectory = directoryExists path'
-               if isFile
-               then return File path'
-               else
-                   if isDirectory
-                   then return Directory path'
-                   else
-                       return sprintf "No such file or directory: %s" path' |> failwith }
+        path
+        |> fullPath
+        |> FreeDisk.liftM Directory
 
     let sourceFile (path: string): FreeDisk<SourceFile> =
         disk { let! path' = fullPath path

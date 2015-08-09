@@ -78,4 +78,4 @@ module IO =
                     | None -> "*"
                     | Some x -> x
                 Directory.EnumerateFiles(p, pattern') |> f |> interpret
-            | WriteProjectFile (proj, a) -> proj.Save(); a |> interpret
+            | WriteProjectFile (proj, a) -> printfn "writing project file in dir: %A" proj.FullPath; proj.Save(); a |> interpret

@@ -1,13 +1,14 @@
-all: build test
+all: test
 
 build:
-		xbuild NProj.fsproj
+		xbuild /verbosity:minimal NProj.fsproj
 
-test:
-		xbuild NProj.fsproj
-		touch Test.fsproj
-		./bin/Debug/NProj.exe init Test.fsproj
-		./bin/Debug/NProj.exe add Test.fs --project Test.fsproj
+test: clean build
+		mkdir -p Test
+		echo "namespace Test" > Test/Test.fs
+		./bin/Debug/NProj.exe init Test
+		./bin/Debug/NProj.exe add Test/Test.fs --project Test
+    xbuild /verbository:minimal Test/Test.fsproj
 
 clean:
-		rm Test.fsproj
+		rm -rf Test

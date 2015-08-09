@@ -1,7 +1,7 @@
 * NProj - a CLI for .NET project management
 
 - Commands for managing .NET project files, with a familiar interface.
-- Current status: transitioning from prototype. Focusing on F# support.
+- Current status: in progress Focusing on F# support.
 - N.B. managing NuGet packages intentionally excluded: use nuget.exe or paket.
 
 ** TODO Initializing a project
@@ -10,13 +10,25 @@
 nproj init <path="."> --lang=(csharp|fsharp) --type=(library|exe)
 #+end_src
 
-Creates a new project file for that lang at path. If path is a directory, assume the project file has the same name as the directory. Will also create an AssemblyInfo.
+Creates a new project file. Will also create an AssemblyInfo file.
+
+|-----------------+---------------------------------------------------------------------------------------------------------------------------------------------|
+| PATH            | Path to a directory to create a new project file in, taking the directory name as the project file name. Defaults to the current directory. |
+| --lang=LANGUAGE | Acceptable values are =csharp= or =fsharp= (default)                                                                                        |
+| -l              |                                                                                                                                             |
+| --type=TYPE     | Acceptable values are =library= (default) or =exe=                                                                                          |
+| -t              |                                                                                                                                             |
 
 ** TODO Adding source files/references/other files
 
 #+begin_src
 nproj add <...filenames> --project="."
 #+end_src
+
+|-----------+----------------------------------------------------------------------------------|
+| FILENAMES | One or more files to add to the project.                                         |
+| --project | Directory of the project to add the files to. Defaults to the current directory. |
+| -p        |                                                                                  |
 
 Action depends on the file extension:
 - *.cs or *.fs will be added as a compile include

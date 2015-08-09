@@ -6,6 +6,31 @@ module Init =
     open NProj.IO
     open NProj.Project
 
+    type Language =
+    | CSharp
+    | FSharp with
+      member x.Extension: string =
+        match x with
+        | CSharp -> "csproj"
+        | FSharp -> "fsproj"
+
+      static member Parse (x: string): Language option =
+        match x.ToLowerInvariant() with
+        | "csharp" -> Some CSharp
+        | "fsharp" -> Some FSharp
+        | _ -> None
+
+    type AssemblyType =
+    | Exe
+    | Library with
+      static member Parse (x: string): AssemblyType option =
+        match x.ToLowerInvariant() with
+        | "exe" -> Some Exe
+        | "console" -> Some Exe
+        | "lib" -> Some Library
+        | "library" -> Some Library
+        | _ -> None
+
     type InitCommand = { ProjectFile: ProjectFileLocation
                          Lang: Language
                          Type: AssemblyType }
@@ -52,24 +77,22 @@ module Init =
 
     let projectName (project: ProjectFileLocation): string =
         match project with
-        | Directory x -> System.IO.Path.GetDirectoryName x
-        | File x -> System.IO.Path.GetFileNameWithoutExtension x
+        | Directory x -> System.IO.Path.GetFileName x
 
     let execute (cmd: InitCommand): FreeDisk<unit> =
         let name = projectName cmd.ProjectFile
 
         let project = { ProjectFilePath = match cmd.ProjectFile with
-                                          | File x -> x
                                           | Directory x -> System.IO.Path.Combine(x, cmd.Lang.Extension |> sprintf "%s.%s" name)
 
                         Properties = Map.ofSeq [ ("Language", sprintf "%A" cmd.Lang)
+                                                 ("SchemaVersion", "2.0")
+                                                 ("ProjectGuid", System.Guid.NewGuid().ToString())
                                                  ("OutputType", sprintf "%A" cmd.Type)
                                                  ("Name", name)
                                                  ("RootNamespace", name)
                                                  ("AssemblyName", name)
-                                                 ("SchemaVersion", "2.0")
-                                                 ("ProjectGuid", System.Guid.NewGuid().ToString())
-                                                 ("TargetFrameworkVersion", "v4.0") ]
+                                                 ("TargetFrameworkVersion", "v4.5") ]
 
                         Items = [ Import @"$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
                                   Reference "mscorlib"
@@ -87,4 +110,5 @@ module Init =
                                    |> Map.add "TargetFSharpCoreVersion" "4.3.0.0"
                       Items = Seq.append project.Items [ Reference "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" ] }
 
+        printfn "Creating project: %A" project'
         Project.create project' |> writeProjectFile

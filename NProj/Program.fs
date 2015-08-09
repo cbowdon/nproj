@@ -8,9 +8,11 @@ let main (argv: string[]): int =
         match List.ofArray argv with
         | "init"::rest ->
             IO.disk { let! cmd = Init.parse rest
+                      printfn "%A" cmd
                       return! Init.execute cmd }
         | "add"::rest ->
             IO.disk { let! cmd = Add.parse rest
+                      printfn "%A" cmd
                       return! Add.execute cmd }
         | x::_ -> sprintf "Unrecognized command: %s" x |> failwith |> IO.Pure
         | [] -> failwith "No commands given" |> IO.Pure

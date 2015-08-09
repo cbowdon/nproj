@@ -61,7 +61,6 @@ module Add =
         disk { let! projectFile =
                    match cmd.ProjectFile with
                    | Directory path -> projectFileInDir path
-                   | File path -> Pure path
                let project = new Project(projectFile)
                cmd.SourceFiles |> Seq.iter (addItem project)
                moveProgramFsToEnd project }
