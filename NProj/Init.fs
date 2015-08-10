@@ -6,31 +6,6 @@ module Init =
     open NProj.IO
     open NProj.Project
 
-    type Language =
-    | CSharp
-    | FSharp with
-      member x.Extension: string =
-        match x with
-        | CSharp -> "csproj"
-        | FSharp -> "fsproj"
-
-      static member Parse (x: string): Language option =
-        match x.ToLowerInvariant() with
-        | "csharp" -> Some CSharp
-        | "fsharp" -> Some FSharp
-        | _ -> None
-
-    type AssemblyType =
-    | Exe
-    | Library with
-      static member Parse (x: string): AssemblyType option =
-        match x.ToLowerInvariant() with
-        | "exe" -> Some Exe
-        | "console" -> Some Exe
-        | "lib" -> Some Library
-        | "library" -> Some Library
-        | _ -> None
-
     type InitCommand = { ProjectFile: ProjectFileLocation
                          Lang: Language
                          Type: AssemblyType }
@@ -75,31 +50,11 @@ module Init =
     let parse (args: string seq): FreeDisk<InitCommand> =
         foldParsers [ parseProjectFile; parseLang; parseType ] defaultInit args
 
-    let projectName (project: ProjectFileLocation): string =
-        match project with
-        | Directory x -> System.IO.Path.GetFileName x
-
     let execute (cmd: InitCommand): FreeDisk<unit> =
-        let name = projectName cmd.ProjectFile
+        let (Directory dir) = cmd.ProjectFile
+        let name = System.IO.Path.GetFileName dir
 
-        let project = { ProjectFilePath = match cmd.ProjectFile with
-                                          | Directory x -> System.IO.Path.Combine(x, cmd.Lang.Extension |> sprintf "%s.%s" name)
-
-                        PropertyGroups = [ { Condition = None
-                                             Properties = Map.ofSeq [ ("Language", sprintf "%A" cmd.Lang)
-                                                                      ("SchemaVersion", "2.0")
-                                                                      ("ProjectGuid", System.Guid.NewGuid().ToString())
-                                                                      ("OutputType", sprintf "%A" cmd.Type)
-                                                                      ("Name", name)
-                                                                      ("RootNamespace", name)
-                                                                      ("AssemblyName", name)
-                                                                      ("TargetFrameworkVersion", "v4.5") ] } ]
-
-                        Items = [ Import @"$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
-                                  Reference "mscorlib"
-                                  Reference "System"
-                                  Reference "System.Core"
-                                  Reference "System.Numerics" ] }
+        let project = minimalProject cmd.Lang cmd.Type dir name
 
         // Add language specific items and properties
         let project' =
