@@ -6,8 +6,11 @@ module Project =
     open Microsoft.Build.Evaluation
     open NProj.Common
 
+    type PropertyGroup = { Properties: Map<string, string>
+                           Condition: string option }
+
     type NProject = { ProjectFilePath: string
-                      Properties: Map<string, string>
+                      PropertyGroups: PropertyGroup seq
                       Items: SourceFile seq }
 
     let relativePath (project: Project) (path: string): string =
@@ -16,8 +19,13 @@ module Project =
         let relUri = projUri.MakeRelativeUri(pathUri)
         relUri.ToString()
 
-    let addProperty (msProj: Project) (key: string) (value: string): unit =
-        msProj.SetProperty(key, value) |> ignore
+    let addPropertyGroup (msProj: Project) (propertyGroup: PropertyGroup): unit =
+        let pg = msProj.Xml.AddPropertyGroup()
+        match propertyGroup.Condition with
+        | None -> ()
+        | Some x -> pg.Condition <- x
+        propertyGroup.Properties
+        |> Map.iter (fun k v -> pg.AddProperty(k, v) |> ignore)
 
     let addItem (msProj: Project) (item: SourceFile): unit =
         let rp = relativePath msProj
@@ -35,6 +43,6 @@ module Project =
         let msProj = Project()
         msProj.FullPath <- nProj.ProjectFilePath
         msProj.Xml.DefaultTargets <- "Build"
-        nProj.Properties |> Map.iter (addProperty msProj)
+        nProj.PropertyGroups |> Seq.iter (addPropertyGroup msProj)
         nProj.Items |> Seq.iter (addItem msProj)
         msProj

@@ -85,14 +85,15 @@ module Init =
         let project = { ProjectFilePath = match cmd.ProjectFile with
                                           | Directory x -> System.IO.Path.Combine(x, cmd.Lang.Extension |> sprintf "%s.%s" name)
 
-                        Properties = Map.ofSeq [ ("Language", sprintf "%A" cmd.Lang)
-                                                 ("SchemaVersion", "2.0")
-                                                 ("ProjectGuid", System.Guid.NewGuid().ToString())
-                                                 ("OutputType", sprintf "%A" cmd.Type)
-                                                 ("Name", name)
-                                                 ("RootNamespace", name)
-                                                 ("AssemblyName", name)
-                                                 ("TargetFrameworkVersion", "v4.5") ]
+                        PropertyGroups = [ { Condition = None
+                                             Properties = Map.ofSeq [ ("Language", sprintf "%A" cmd.Lang)
+                                                                      ("SchemaVersion", "2.0")
+                                                                      ("ProjectGuid", System.Guid.NewGuid().ToString())
+                                                                      ("OutputType", sprintf "%A" cmd.Type)
+                                                                      ("Name", name)
+                                                                      ("RootNamespace", name)
+                                                                      ("AssemblyName", name)
+                                                                      ("TargetFrameworkVersion", "v4.5") ] } ]
 
                         Items = [ Import @"$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
                                   Reference "mscorlib"
@@ -105,10 +106,20 @@ module Init =
             match cmd.Lang with
             | CSharp -> project
             | FSharp ->
+                let fsharpTargetsPath = "FSharpTargetsPath"
+                let fsharpTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets"
+                let fsharpTargetsPg = { Condition = fsharpTargets |> sprintf "Exists('%s')" |> Some
+                                        Properties = Map.ofSeq [ (fsharpTargetsPath, fsharpTargets) ] }
+
+                let origPg = Seq.head project.PropertyGroups
+                let origPg' = { origPg with Properties = Map.add "TargetFSharpCoreVersion" "4.3.0.0" origPg.Properties }
+
+                let fsharpCore = "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+
                 { project with
-                      Properties = project.Properties
-                                   |> Map.add "TargetFSharpCoreVersion" "4.3.0.0"
-                      Items = Seq.append project.Items [ Reference "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" ] }
+                      PropertyGroups = [ origPg'; fsharpTargetsPg ]
+                      Items = Seq.append project.Items [ Reference fsharpCore;
+                                                         fsharpTargetsPath |> sprintf "$(%s)" |> Import ] }
 
         printfn "Creating project: %A" project'
         Project.create project' |> writeProjectFile
