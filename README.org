@@ -7,34 +7,35 @@
 ** TODO Initializing a project
 
 #+begin_src
-nproj init <path="."> --lang=(csharp|fsharp) --type=(library|exe)
+nproj init <directory="."> --lang (csharp|fsharp) --type (library|exe)
 #+end_src
 
 Creates a new project file. Will also create an AssemblyInfo file.
 
-|-----------------+---------------------------------------------------------------------------------------------------------------------------------------------|
-| PATH            | Path to a directory to create a new project file in, taking the directory name as the project file name. Defaults to the current directory. |
-| --lang=LANGUAGE | Acceptable values are =csharp= or =fsharp= (default)                                                                                        |
-| -l              |                                                                                                                                             |
-| --type=TYPE     | Acceptable values are =library= (default) or =exe=                                                                                          |
-| -t              |                                                                                                                                             |
+|-------------------+---------------------------------------------------------------------------------------------------------------------------------------------|
+| =DIRECTORY=       | Path to a directory to create a new project file in, taking the directory name as the project file name. Defaults to the current directory. |
+| =--lang LANGUAGE= | Acceptable values are =csharp= or =fsharp= (default)                                                                                        |
+| =-l LANGUAGE=     |                                                                                                                                             |
+| =--type TYPE=     | Acceptable values are =library= (default) or =exe=                                                                                          |
+| =-t TYPE=         |                                                                                                                                             |
 
 ** TODO Adding source files/references/other files
 
 #+begin_src
-nproj add <...filenames> --project="."
+nproj add <...filenames> --project "."
 #+end_src
 
-|-----------+----------------------------------------------------------------------------------|
-| FILENAMES | One or more files to add to the project.                                         |
-| --project | Directory of the project to add the files to. Defaults to the current directory. |
-| -p        |                                                                                  |
+|-----------------------+----------------------------------------------------------------------------------|
+| =FILENAMES=           | One or more files to add to the project.                                         |
+| =--project DIRECTORY= | Directory of the project to add the files to. Defaults to the current directory. |
+| =-p=                  |                                                                                  |
 
 Action depends on the file extension:
 - *.cs or *.fs will be added as a compile include
 - *.csproj or *.fsproj will be added as reference include
 - *.dll will be added as a reference include
-- anything else will be added as a data file
+- *.props or *.targets will be added as imports
+- anything else will be added as a content include
 
 If it's a source file (*.fs, *.cs) and it doesn't exist, an empty file will be created.
 
@@ -47,15 +48,15 @@ In future it might be nice to parse =open= statements and =namespace=, =module= 
 ** TODO Removing files
 
 #+begin_src
-nproj remove <..filenames> --project="."
-nproj rm <..filenames> --project="."
+nproj remove <..filenames> --project "."
+nproj rm <..filenames> --project "."
 #+end_src
 
 ** TODO Moving files
 
 #+begin_src
-nproj move <old_filename> <new_filename> --project="."
-nproj mv <old_filename> <new_filename> --project="."
+nproj move <old_filename> <new_filename> --project "."
+nproj mv <old_filename> <new_filename> --project "."
 #+end_src
 
 ** TODO Converting to project.json
@@ -75,8 +76,9 @@ Done. Should probably tag last working prototype.
 xUnit 2.0 has errors with Mono 4.0.2, awaiting Mono 4.3
 **** TODO Refactor with CQS project abstraction 
 Microsoft.Build.Evaluation.Project's API is not very reasonable.
-**** TODO Build process
-At least need a makefile...
+**** DONE Build process
+CLOSED: [2015-08-10 Mon 05:45]
+Bare minimum: got a make file, could do better though.
 *** Third party
 Issues with libraries, tooling, etc. Should raise bugs or make fix.
 **** TODO The MSBuild library on NuGet does not work from fsx files, only compiled exes
