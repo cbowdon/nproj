@@ -87,6 +87,7 @@
     <Compile Include="IO.fs" />
     <Compile Include="CommonTypes.fs" />
     <Compile Include="Project.fs" />
+    <Compile Include="Language.fs" />
     <Compile Include="Init.fs" />
     <Compile Include="Add.fs" />
     <Compile Include="Program.fs" />

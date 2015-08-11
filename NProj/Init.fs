@@ -54,27 +54,9 @@ module Init =
         let (Directory dir) = cmd.ProjectFile
         let name = System.IO.Path.GetFileName dir
 
-        let project = minimalProject cmd.Lang cmd.Type dir name
+        let lang = Language.instance cmd.Lang
+        let project = lang.DefaultProject cmd.Type dir name
 
-        // Add language specific items and properties
-        let project' =
-            match cmd.Lang with
-            | CSharp -> project
-            | FSharp ->
-                let fsharpTargetsPath = "FSharpTargetsPath"
-                let fsharpTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets"
-                let fsharpTargetsPg = { Condition = fsharpTargets |> sprintf "Exists('%s')" |> Some
-                                        Properties = Map.ofSeq [ (fsharpTargetsPath, fsharpTargets) ] }
-
-                let origPg = Seq.head project.PropertyGroups
-                let origPg' = { origPg with Properties = Map.add "TargetFSharpCoreVersion" "4.3.0.0" origPg.Properties }
-
-                let fsharpCore = "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
-
-                { project with
-                      PropertyGroups = [ origPg'; fsharpTargetsPg ]
-                      Items = Seq.append project.Items [ Reference fsharpCore;
-                                                         fsharpTargetsPath |> sprintf "$(%s)" |> Import ] }
-
-        printfn "Creating project: %A" project'
-        Project.create project' |> writeProjectFile
+        printfn "Creating project: %A" project
+        Project.create project |> writeProjectFile
+        // TODO create assembly info
