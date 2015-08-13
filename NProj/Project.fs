@@ -13,19 +13,6 @@ module Project =
                       PropertyGroups: PropertyGroup seq
                       Items: SourceFile seq }
 
-    type Language =
-    | CSharp
-    | FSharp with
-      member x.Extension: string =
-        match x with
-        | CSharp -> "csproj"
-        | FSharp -> "fsproj"
-      static member Parse (x: string): Language option =
-        match x.ToLowerInvariant() with
-        | "csharp" -> Some CSharp
-        | "fsharp" -> Some FSharp
-        | _ -> None
-
     type AssemblyType =
     | Exe
     | Library with
@@ -69,23 +56,3 @@ module Project =
         nProj.PropertyGroups |> Seq.iter (addPropertyGroup msProj)
         nProj.Items |> Seq.iter (addItem msProj)
         msProj
-
-    let minimalProject (lang: Language) (outputType: AssemblyType) (directory: string) (name: string): NProject =
-
-        { ProjectFilePath = System.IO.Path.Combine(directory, lang.Extension |> sprintf "%s.%s" name)
-
-          PropertyGroups = [ { Condition = None
-                               Properties = Map.ofSeq [ ("Language", sprintf "%A" lang)
-                                                        ("SchemaVersion", "2.0")
-                                                        ("ProjectGuid", System.Guid.NewGuid().ToString())
-                                                        ("OutputType", sprintf "%A" outputType)
-                                                        ("Name", name)
-                                                        ("RootNamespace", name)
-                                                        ("AssemblyName", name)
-                                                        ("TargetFrameworkVersion", "v4.5") ] } ]
-
-          Items = [ Import @"$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
-                    Reference "mscorlib"
-                    Reference "System"
-                    Reference "System.Core"
-                    Reference "System.Numerics" ] }
