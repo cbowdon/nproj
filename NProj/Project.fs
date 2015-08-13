@@ -61,7 +61,6 @@ module Project =
         | Import x ->
             let import = msProj.Xml.AddImport(x)
             import.Condition <- sprintf "Exists('%s')" (x)
-        msProj.Save()
 
     let create (nProj: NProject): Project =
         let msProj = Project()

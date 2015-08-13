@@ -7,7 +7,9 @@ module Language =
     open NProj.Project
 
     type ILanguage =
+        // TODO should be ProjectFileExtension
         abstract member Extension: string
+        abstract member SourceExtension: string
         abstract member AssemblyInfoTemplate: Uri
         abstract member SourceFileTemplate: Uri
         abstract member DefaultProject: AssemblyType -> string -> string -> NProject
@@ -15,6 +17,7 @@ module Language =
     type CSharp() =
         interface ILanguage with
             member this.Extension = "csproj"
+            member this.SourceExtension = "cs"
             member this.AssemblyInfoTemplate = Uri("Templates/CSharp/AssemblyInfo.cs")
             member this.SourceFileTemplate = Uri("Templates/CSharp/Class.cs")
             member this.DefaultProject outputType directory name =
@@ -23,6 +26,7 @@ module Language =
     type FSharp() =
         interface ILanguage with
             member this.Extension = "fsproj"
+            member this.SourceExtension = "fs"
             member this.AssemblyInfoTemplate = Uri("Templates/FSharp/AssemblyInfo.fs")
             member this.SourceFileTemplate = Uri("Templates/FSharp/Module.fs")
             member this.DefaultProject outputType directory name =

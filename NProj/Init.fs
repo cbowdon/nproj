@@ -2,10 +2,12 @@ namespace NProj
 
 module Init =
 
+    open System
     open NProj.Common
     open NProj.IO
     open NProj.Project
 
+    // TODO should be ProjectDirectory
     type InitCommand = { ProjectFile: ProjectFileLocation
                          Lang: Language
                          Type: AssemblyType }
@@ -49,6 +51,15 @@ module Init =
 
     let parse (args: string seq): FreeDisk<InitCommand> =
         foldParsers [ parseProjectFile; parseLang; parseType ] defaultInit args
+
+    let createAssemblyInfo (cmd: InitCommand): FreeDisk<unit> =
+        disk { let lang = Language.instance cmd.Lang
+               let! template = lang.AssemblyInfoTemplate.AbsolutePath |> readFile
+               let (Directory dir) = cmd.ProjectFile
+               let name = System.IO.Path.GetFileName dir
+               let path = lang.SourceExtension |> sprintf "%s/AssemblyInfo.%s" dir
+               let content = String.Format(template, name)
+               return! writeFile path content }
 
     let execute (cmd: InitCommand): FreeDisk<unit> =
         let (Directory dir) = cmd.ProjectFile

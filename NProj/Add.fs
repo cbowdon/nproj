@@ -44,7 +44,7 @@ module Add =
                | _ -> return failwith "Multiple project files in directory %s" dir }
 
     // TODO should this live in NProj.Project?
-    let moveProgramFsToEnd (project: Project): unit =
+    let sortCompileItems (project: Project): unit =
         let isProgramFs (item: ProjectItem): bool =
             item.EvaluatedInclude
             |> System.IO.Path.GetFileName
@@ -55,7 +55,6 @@ module Add =
         | Some p ->
             project.RemoveItem(p) |> ignore
             project.AddItemFast("Compile", p.EvaluatedInclude) |> ignore
-            project.Save()
 
     let execute (cmd: AddCommand): FreeDisk<unit> =
         disk { let! projectFile =
@@ -63,4 +62,5 @@ module Add =
                    | Directory path -> projectFileInDir path
                let project = new Project(projectFile)
                cmd.SourceFiles |> Seq.iter (addItem project)
-               moveProgramFsToEnd project }
+               sortCompileItems project
+               return! writeProjectFile project }

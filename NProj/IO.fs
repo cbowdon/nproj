@@ -12,6 +12,8 @@ module IO =
     | Extension of string * (string -> 'a)
     | ListFiles of string * string option * (string seq -> 'a)
     | WriteProjectFile of Project * 'a
+    | ReadFile of string * (string -> 'a)
+    | WriteFile of string * string * 'a
     with
         static member fmap (f: 'a -> 'b) (x: Disk<'a>): Disk<'b> =
             match x with
@@ -21,6 +23,8 @@ module IO =
             | Extension (p, f') -> Extension (p, f' >> f)
             | ListFiles (p, pattern, f') -> ListFiles (p, pattern, f' >> f)
             | WriteProjectFile (proj, a) -> WriteProjectFile (proj, f a)
+            | ReadFile (p, f') -> ReadFile (p, f' >> f)
+            | WriteFile (p, content, a) -> WriteFile (p, content, f a)
 
     type FreeDisk<'a> =
     | Pure of 'a
@@ -62,6 +66,8 @@ module IO =
     let extension (path: string): FreeDisk<string> = Extension (path, id) |> FreeDisk.lift
     let listFiles (path: string) (pattern: string option): FreeDisk<string seq> = ListFiles (path, pattern, id) |> FreeDisk.lift
     let writeProjectFile (project: Project): FreeDisk<unit> = WriteProjectFile (project, ()) |> FreeDisk.lift
+    let readFile (path: string): FreeDisk<string> = ReadFile (path, id) |> FreeDisk.lift
+    let writeFile (path: string) (content: string): FreeDisk<unit> = WriteFile (path, content, ()) |> FreeDisk.lift
 
     let rec interpret (fd: FreeDisk<'a>): 'a =
         match fd with
@@ -78,4 +84,7 @@ module IO =
                     | None -> "*"
                     | Some x -> x
                 Directory.EnumerateFiles(p, pattern') |> f |> interpret
-            | WriteProjectFile (proj, a) -> printfn "writing project file in dir: %A" proj.FullPath; proj.Save(); a |> interpret
+            | WriteProjectFile (proj, a) -> printfn "writing project file in dir: %A" proj.FullPath; proj.Save(); interpret a
+            | ReadFile (p, f) -> p |> File.ReadAllText |> f |> interpret
+            | WriteFile (p, content, a) -> File.WriteAllText(p, content); interpret a
+
