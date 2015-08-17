@@ -3,11 +3,10 @@ namespace NProj
 module Add =
     open System
     open System.Linq
-    // TODO should this even be accessible?
-    open Microsoft.Build.Evaluation
     open NProj.Common
     open NProj.IO
     open NProj.Project
+    open NProj.Language
 
     type AddCommand = { SourceFiles: SourceFile seq
                         ProjectFile: ProjectFileLocation }
@@ -43,24 +42,15 @@ module Add =
                | [x] -> return x
                | _ -> return failwith "Multiple project files in directory %s" dir }
 
-    // TODO should this live in NProj.Project?
-    let sortCompileItems (project: Project): unit =
-        let isProgramFs (item: ProjectItem): bool =
-            item.EvaluatedInclude
-            |> System.IO.Path.GetFileName
-            |> (=) "Program.fs"
-        let programFs = project.GetItems("Compile") |> Seq.tryFind isProgramFs
-        match programFs with
-        | None -> ()
-        | Some p ->
-            project.RemoveItem(p) |> ignore
-            project.AddItemFast("Compile", p.EvaluatedInclude) |> ignore
-
     let execute (cmd: AddCommand): FreeDisk<unit> =
-        disk { let! projectFile =
-                   match cmd.ProjectFile with
-                   | Directory path -> projectFileInDir path
-               let project = new Project(projectFile)
-               cmd.SourceFiles |> Seq.iter (addItem project)
-               sortCompileItems project
-               return! writeProjectFile project }
+        disk { let (Directory dir) = cmd.ProjectFile
+               let! projectFiles = listFiles dir (Some "*proj")
+               let proj =
+                   match List.ofSeq projectFiles with
+                   | [x] -> x
+                   | [] -> failwith "No project file in directory"
+                   | _ -> failwith "Multiple project files in directory. What are you doing?"
+
+               let msProj = merge { ProjectFilePath = proj; Items = cmd.SourceFiles; PropertyGroups = [] }
+
+               return! writeProjectFile msProj }

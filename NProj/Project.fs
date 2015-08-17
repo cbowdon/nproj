@@ -56,3 +56,15 @@ module Project =
         nProj.PropertyGroups |> Seq.iter (addPropertyGroup msProj)
         nProj.Items |> Seq.iter (addItem msProj)
         msProj
+
+    let merge (nProj: NProject): Project =
+        let msProj = Project(nProj.ProjectFilePath)
+        nProj.Items |> Seq.iter (addItem msProj)
+        nProj.PropertyGroups |> Seq.iter (addPropertyGroup msProj)
+        msProj
+
+    let removeItems (project: ProjectFileLocation) (items: SourceFile seq): Project =
+        failwith "undefined"
+
+    let sortCompileItems (project: ProjectFileLocation) (sort: SourceFile seq -> SourceFile seq): Project =
+        failwith "undefined"
