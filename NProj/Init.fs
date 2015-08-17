@@ -55,11 +55,12 @@ module Init =
 
     let createAssemblyInfo (cmd: InitCommand): FreeDisk<unit> =
         disk { let lang = cmd.Lang.Spec
-               let! template = lang.AssemblyInfoTemplate.AbsolutePath |> readFile
+               let! template = lang.AssemblyInfoTemplate |> readFile
                let (Directory dir) = cmd.ProjectFile
                let name = System.IO.Path.GetFileName dir
                let path = lang.SourceExtension |> sprintf "%s/AssemblyInfo.%s" dir
                let content = String.Format(template, name)
+               printfn "Creating file at %s" path
                return! writeFile path content }
 
     let execute (cmd: InitCommand): FreeDisk<unit> =
@@ -68,6 +69,6 @@ module Init =
 
         let project = cmd.Lang.Spec.DefaultProject cmd.Type dir name
 
-        printfn "Creating project: %A" project
-        Project.create project |> writeProjectFile
-        // TODO create assembly info
+        disk { do! createAssemblyInfo cmd
+               printfn "Creating project: %A" project
+               do! Project.create project |> writeProjectFile }

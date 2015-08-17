@@ -16,13 +16,13 @@ module Project =
     type AssemblyType =
     | Exe
     | Library with
-      static member Parse (x: string): AssemblyType option =
-        match x.ToLowerInvariant() with
-        | "exe" -> Some Exe
-        | "console" -> Some Exe
-        | "lib" -> Some Library
-        | "library" -> Some Library
-        | _ -> None
+        static member Parse (x: string): AssemblyType option =
+            match x.ToLowerInvariant() with
+            | "exe" -> Some Exe
+            | "console" -> Some Exe
+            | "lib" -> Some Library
+            | "library" -> Some Library
+            | _ -> None
 
     let relativePath (project: Project) (path: string): string =
         let pathUri = Uri(path)
@@ -62,9 +62,6 @@ module Project =
         nProj.Items |> Seq.iter (addItem msProj)
         nProj.PropertyGroups |> Seq.iter (addPropertyGroup msProj)
         msProj
-
-    let removeItems (project: ProjectFileLocation) (items: SourceFile seq): Project =
-        failwith "undefined"
 
     let sortCompileItems (project: ProjectFileLocation) (sort: SourceFile seq -> SourceFile seq): Project =
         failwith "undefined"
