@@ -6,7 +6,7 @@ module Common =
     open System.Linq
     open NProj.IO
 
-    type ProjectFileLocation = Directory of string
+    type Directory = Directory of string
 
     type SourceFile =
     | Compile of string
@@ -40,8 +40,7 @@ module Common =
         let raw = collectArgs args
         parsers |> Seq.fold (fun acc p -> p raw acc) defolt
 
-    // TODO doesn't support naming a new file
-    let projectFileLocation (path: string): FreeDisk<ProjectFileLocation> =
+    let directory (path: string): FreeDisk<Directory> =
         path
         |> fullPath
         |> FreeDisk.liftM Directory

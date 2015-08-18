@@ -8,14 +8,13 @@ module Init =
     open NProj.Project
     open NProj.Language
 
-    // TODO should be ProjectDirectory
-    type InitCommand = { ProjectFile: ProjectFileLocation
+    type InitCommand = { ProjectDirectory: Directory
                          Lang: Language
                          Type: AssemblyType }
 
     let defaultInit =
-        disk { let! pfl = projectFileLocation "."
-               return { ProjectFile = pfl
+        disk { let! pfl = directory "."
+               return { ProjectDirectory = pfl
                         Lang = FSharp
                         Type = Library } }
 
@@ -24,8 +23,8 @@ module Init =
                match raw.Arguments with
                | [] -> return cmd'
                | [x] ->
-                    let! pfl = projectFileLocation x
-                    return { cmd' with ProjectFile = pfl }
+                    let! pfl = directory x
+                    return { cmd' with ProjectDirectory = pfl }
                | _ -> return failwith "Too many arguments specified; expected one." }
 
     let parseLang (raw: Command) (cmd: FreeDisk<InitCommand>) =
@@ -56,7 +55,7 @@ module Init =
     let createAssemblyInfo (cmd: InitCommand): FreeDisk<unit> =
         disk { let lang = cmd.Lang.Spec
                let! template = lang.AssemblyInfoTemplate |> readFile
-               let (Directory dir) = cmd.ProjectFile
+               let (Directory dir) = cmd.ProjectDirectory
                let name = System.IO.Path.GetFileName dir
                let path = lang.SourceExtension |> sprintf "%s/AssemblyInfo.%s" dir
                let content = String.Format(template, name)
@@ -64,7 +63,7 @@ module Init =
                return! writeFile path content }
 
     let execute (cmd: InitCommand): FreeDisk<unit> =
-        let (Directory dir) = cmd.ProjectFile
+        let (Directory dir) = cmd.ProjectDirectory
         let name = System.IO.Path.GetFileName dir
 
         let project = cmd.Lang.Spec.DefaultProject cmd.Type dir name

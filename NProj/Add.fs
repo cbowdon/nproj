@@ -9,10 +9,10 @@ module Add =
     open NProj.Language
 
     type AddCommand = { SourceFiles: SourceFile seq
-                        ProjectFile: ProjectFileLocation }
+                        ProjectFile: Directory }
 
     let defaultAdd =
-        disk { let! pf = projectFileLocation "."
+        disk { let! pf = directory "."
                return { SourceFiles = []; ProjectFile = pf } }
 
     let parseSourceFiles (raw: Command) (cmd: FreeDisk<AddCommand>) =
@@ -29,7 +29,7 @@ module Add =
                | None -> return cmd'
                | Some None -> return failwith "The flag \"--project\" requires an argument"
                | Some (Some x) ->
-                    let! pfl = projectFileLocation x
+                    let! pfl = directory x
                     return { cmd' with ProjectFile = pfl } }
 
     let parse (args: string seq): FreeDisk<AddCommand> =
@@ -51,6 +51,6 @@ module Add =
                    | [] -> failwith "No project file in directory"
                    | _ -> failwith "Multiple project files in directory. What are you doing?"
 
-               let msProj = merge { ProjectFilePath = proj; Items = cmd.SourceFiles; PropertyGroups = [] }
+               let msProj = add { ProjectFilePath = proj; Items = cmd.SourceFiles; PropertyGroups = [] }
 
                return! writeProjectFile msProj }
