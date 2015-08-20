@@ -70,4 +70,4 @@ module Init =
 
         disk { do! createAssemblyInfo cmd
                printfn "Creating project: %A" project
-               do! Project.create project |> writeProjectFile }
+               do! Project.create project }

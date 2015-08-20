@@ -51,6 +51,4 @@ module Add =
                    | [] -> failwith "No project file in directory"
                    | _ -> failwith "Multiple project files in directory. What are you doing?"
 
-               let msProj = add { ProjectFilePath = proj; Items = cmd.SourceFiles; PropertyGroups = [] }
-
-               return! writeProjectFile msProj }
+               do! add { ProjectFilePath = proj; Items = cmd.SourceFiles; PropertyGroups = [] } }
