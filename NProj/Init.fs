@@ -15,7 +15,7 @@ module Init =
     let defaultInit =
         disk { let! pfl = directory "."
                return { ProjectDirectory = pfl
-                        Lang = FSharp
+                        Lang = fsharp
                         Type = Library } }
 
     let parseProjectFile (raw: Command) (cmd: FreeDisk<InitCommand>) =
@@ -33,7 +33,7 @@ module Init =
             | None -> cmd'
             | Some None -> failwith "The flag \"--lang\" requires an argument"
             | Some (Some x) ->
-                match Language.Parse x with
+                match Language.parse x with
                 | None -> failwith "Language not recognised: %s" x
                 | Some lang -> { cmd' with Lang = lang }
         FreeDisk.liftM parseLang' cmd
@@ -53,7 +53,7 @@ module Init =
         foldParsers [ parseProjectFile; parseLang; parseType ] defaultInit args
 
     let createAssemblyInfo (cmd: InitCommand): FreeDisk<unit> =
-        disk { let lang = cmd.Lang.Spec
+        disk { let lang = cmd.Lang
                let! template = lang.AssemblyInfoTemplate |> readFile
                let (Directory dir) = cmd.ProjectDirectory
                let name = System.IO.Path.GetFileName dir
@@ -66,7 +66,12 @@ module Init =
         let (Directory dir) = cmd.ProjectDirectory
         let name = System.IO.Path.GetFileName dir
 
-        let project = cmd.Lang.Spec.DefaultProject cmd.Type dir name
+        let defaultProject =
+            match cmd.Lang.Name with
+            | CSharp -> CSharp.defaultProject
+            | FSharp -> FSharp.defaultProject
+
+        let project = defaultProject cmd.Type dir name
 
         disk { do! createAssemblyInfo cmd
                printfn "Creating project: %A" project
