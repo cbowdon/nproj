@@ -4,6 +4,7 @@ module Init =
 
     open System
     open NProj.Common
+    open NProj.LanguageTypes
     open NProj.IO
     open NProj.Project
     open NProj.Language

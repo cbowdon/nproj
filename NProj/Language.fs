@@ -5,16 +5,7 @@ module Language =
     open System
     open NProj.Common
     open NProj.Project
-
-    type LanguageName =
-    | CSharp
-    | FSharp
-
-    type Language = { Name: LanguageName
-                      ProjectExtension: string
-                      SourceExtension: string
-                      AssemblyInfoTemplate: string
-                      SourceTemplate: string }
+    open NProj.LanguageTypes
 
     let csharp = { Name = CSharp
                    ProjectExtension = "csproj"
