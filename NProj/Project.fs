@@ -52,7 +52,9 @@ module Project =
             match List.ofSeq compileGroups with
             | [] -> msProj.AddItem("Compile", rp path) |> ignore
             | x::_ ->
-                 let items = x.Items // TODO sort items according to language-specific rules
+                 let items = x.Items
+                 // TODO lang
+                 // let lang = msProj.FullPath |> System.IO.Path.GetExtension |> Language.fromExtension
                  x.RemoveAllChildren()
                  seq { yield x.AddItem("Compile", rp path)
                        for i in items do

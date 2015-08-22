@@ -54,10 +54,15 @@ module Language =
                     Reference "System.Core"
                     Reference "System.Numerics" ] }
 
-
     let fromExtension (ext: string): Language option =
-        let l = [ csharp; fsharp ] |> Seq.map (fun lang -> [ lang.ProjectExtension; lang.SourceExtension ])
-        failwith "TODO"
+        let exts = seq { yield csharp.ProjectExtension, csharp
+                         yield csharp.SourceExtension, csharp
+                         yield fsharp.ProjectExtension, fsharp
+                         yield fsharp.SourceExtension, fsharp }
+        let res = exts |> Seq.tryFind (fun (e,_) -> ext = e)
+        match res with
+        | Some (_,l) -> Some l
+        | None -> None
 
     module CSharp =
         let defaultProject outputType directory name =
